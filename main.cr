@@ -19,7 +19,12 @@ abstract class Option(A)
     bind {|_| self}
   end
 
-  def apply(other : Option(B), &block : Option(A -> B)) : Option(B) forall B
+  def apply(other : Option(B), &block : ((A, B)-> C)) : Option(C) forall B, C
+    bind {|a|
+      other.bind { |b| 
+        Some.new(block.call a, b)
+      }
+    }
   end
 end
 
@@ -93,14 +98,37 @@ x = None(Int32).new().bind do |x|
 end
 
 # pp (Some.new(345) << Some.new(34))
-print mdo({
-  x =~ Some.new(32),
-  b = x <= 32,
-  p =~ Some.new(23),
-  z =~ None(Int32).new,
-  a =~ Some.new(23),
-  z = Some.new(a),
-  Some.new([x, a, z])
-}).to_s
+# print mdo({
+#   x =~ Some.new(32),
+#   b = x <= 32,
+#   p =~ Some.new(23),
+#   z =~ None(Int32).new,
+#   a =~ Some.new(23),
+#   z = Some.new(a),
+#   Some.new([x, a, z])
+# }).to_s
+def f(x, y, z) 
+  x + y + z
+end
+macro apply(typ, body)
+  {% for i in 1..body.size - 1 %}
+    {{body[i]}}.bind { |arg{{i}}|
+  {% end %}
+
+  {{typ}}.pure(
+    {{body[0]}}(
+      {% for i in 1..body.size - 2 %}
+        arg{{i}},
+      {% end %}
+      arg{{body.size-1}}
+    )
+  )
+
+  {% for i in 0...body.size - 1 %}
+    }
+  {% end %}
+end
+# Some.new(1).apply Some.new(2), f
+puts apply(Option, [f, Some.new(1), Some.new(2), Some.new(3)]).to_s
 
 # print (a = 23)
