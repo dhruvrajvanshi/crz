@@ -18,6 +18,9 @@ abstract class Option(A)
   def <<(other : Option(B)) : Option(A) forall B
     bind {|_| self}
   end
+
+  def apply(other : Option(B), &block : Option(A -> B)) : Option(B) forall B
+  end
 end
 
 class Some(A) < Option(A)
