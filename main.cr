@@ -144,45 +144,107 @@ macro ap(call)
 end
 
 macro data(args)
-  # base class
+  # base class {{args[0]}}
   class {{args[0]}}
+    {% if args[0].class_name == "Path" %}
+      {% for i in 1...args.size %}
+        {% if args[i].class_name == "Path" %}
+          class {{args[i].names[0]}} < {{args[0]}}
+            def initialize
+            end
+          end
+        {% else %}
+          class {{args[i].name}} < {{args[0]}}
+            def initialize(
+              {% for j in 0...args[i].type_vars.size-1 %}
+                @value{{j}} : {{args[i].type_vars[j]}},
+              {% end %}
+              @value{{args[i].type_vars.size - 1}} : {{args[i].type_vars[args[i].type_vars.size - 1]}}
+            )
+            end
+          end
+        {% end %}
+      {% end %}
+    {% else %}
+      {% for i in 1...args.size %}
+        {% if args[i].class_name == "Path" %}
+          class {{args[i].names[0]}}(
+              {{args[0].type_vars[0]}}
+              {% for j in 1...args[0].type_vars.size %}
+                , {{args[0].type_vars[j]}}
+              {% end %}
+            ) < {{args[0]}}
+            def initialize
+            end
+          end
+        {% else %}
+          class {{args[i].name}}(
+              {{args[0].type_vars[0]}}
+              {% for j in 1...args[0].type_vars.size %}
+                , {{args[0].type_vars[j]}}
+              {% end %}
+            ) < {{args[0]}}
+            def initialize(
+              {% for j in 0...args[i].type_vars.size-1 %}
+                @value{{j}} : {{args[i].type_vars[j]}},
+              {% end %}
+              @value{{args[i].type_vars.size - 1}} : {{args[i].type_vars[args[i].type_vars.size - 1]}}
+            )
+            end
+          end
+        {% end %}
+      {% end %}
+    {% end %}
   end
 
   # variants (subclasses)
-  {% for i in 1...args.size %}
-    {% if args[i].class_name == "Path" %}
-      class {{args[i].names[0]}}(
-          {{args[0].type_vars[0]}}
-          {% for j in 1...args[0].type_vars.size %}
-            , {{args[0].type_vars[j]}}
-          {% end %}
-        ) < {{args[0]}}
-        def initialize
-        end
-      end
-    {% else %}
-      class {{args[i].name}}(
-          {{args[0].type_vars[0]}}
-          {% for j in 1...args[0].type_vars.size %}
-            , {{args[0].type_vars[j]}}
-          {% end %}
-        ) < {{args[0]}}
-        def initialize(
-          {% for j in 0...args[i].type_vars.size-1 %}
-            @value{{j}} : {{args[i].type_vars[j]}},
-          {% end %}
-          @value{{args[i].type_vars.size - 1}} : {{args[i].type_vars[args[i].type_vars.size - 1]}}
-        )
-        end
-      end
-    {% end %}
-  {% end %}
   {{debug()}}
 end
+
 data({List(A),
   Empty,
   Cons(A, List(A))
 })
+
+
+data({IntList,
+  Empty,
+  Cons(Int32, IntList)
+})
+
+
+pp List::Cons.new 1, List::Empty(Int32).new
+
+# matcher({List(A),
+#   Empty,
+#   Cons(A, List(A))
+# })
+
+# base class List(A)
+# class List(A)
+#   macro def match()
+#     if(self.is_a? Empty)
+#       expr
+#     elsif self.is_a? Cons
+#       a = self.value0
+#       b = self.value1
+#       expr
+#     end
+#   end
+# end
+
+# # variants (subclasses)
+# class Empty(A) < List(A)
+#   def initialize
+#   end
+# end
+
+# class Cons(A) < List(A)
+#   def initialize(
+#                  @value0 : A,
+#                  @value1 : List(A))
+#   end
+# end
 
 
 # macro curry(func_def)
