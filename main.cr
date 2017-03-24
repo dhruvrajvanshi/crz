@@ -121,7 +121,7 @@ b = Some.new(23)
 def f(x, y, z, a) 
   x + y + z + a
 end
-macro ap(typ, call)
+macro ap(call)
   {% if call.class_name != "Call" %}
     {{call.raise "Second argument to ap must be a function call"}}
   {% end %}
@@ -129,7 +129,7 @@ macro ap(typ, call)
     {{call.args[i]}}.bind { |arg{{i}}|
   {% end %}
 
-  {{typ}}.pure(
+  typeof({{call.args[0]}}).pure(
     {{call.name}}(
       {% for i in 0..call.args.size - 2 %}
         arg{{i}},
@@ -154,6 +154,6 @@ end
 # Some.new(1).apply Some.new(2), f
 asdf : Monad(Int32) = Some.new(1).map {|x| x+1}
 puts asdf.to_s
-puts ap(Option, f Some.new(1), Some.new(2), Some.new(3), Some.new(4)).to_s
+puts ap(f Some.new(1), Some.new(2), Some.new(3), Some.new(4)).to_s
 
 # print (a = 23)
