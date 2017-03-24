@@ -7,8 +7,10 @@ abstract class Option(A)
     Some.new(value)
   end
 
-  def >=(&block)
-    bind(block)
+  def >=(block : A -> Option(B)) forall B
+    bind do |x|
+      block.call(x)
+    end
   end
 
   def >>(other : Option(B)) : Option(B) forall B
@@ -107,28 +109,31 @@ end
 #   z = Some.new(a),
 #   Some.new([x, a, z])
 # }).to_s
-def f(x, y, z) 
-  x + y + z
+def f(x, y, z, a) 
+  x + y + z + a
 end
-macro apply(typ, body)
-  {% for i in 1..body.size - 1 %}
-    {{body[i]}}.bind { |arg{{i}}|
+macro ap(typ, call)
+  {% if call.class_name != "Call" %}
+    {{call.raise "Second argument to ap must be a function call"}}
+  {% end %}
+  {% for i in 0..call.args.size - 1 %}
+    {{call.args[i]}}.bind { |arg{{i}}|
   {% end %}
 
   {{typ}}.pure(
-    {{body[0]}}(
-      {% for i in 1..body.size - 2 %}
+    {{call.name}}(
+      {% for i in 0..call.args.size - 2 %}
         arg{{i}},
       {% end %}
-      arg{{body.size-1}}
+      arg{{call.args.size-1}}
     )
   )
 
-  {% for i in 0...body.size - 1 %}
+  {% for i in 0...call.args.size %}
     }
   {% end %}
 end
 # Some.new(1).apply Some.new(2), f
-puts apply(Option, [f, Some.new(1), Some.new(2), Some.new(3)]).to_s
+puts ap(Option, f Some.new(1), Some.new(2), Some.new(3), Some.new(4)).to_s
 
 # print (a = 23)
