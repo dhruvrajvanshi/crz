@@ -1,41 +1,58 @@
-abstract class Option(A)
-  abstract def to_s
-  abstract def map(&block : A -> B) : Option(B) forall B
-  abstract def bind(&block : A -> Option(B)) forall B 
+module Functor(A)
+  abstract def map(&block : A -> B) : Functor(B) forall B
 
-  def self.pure(value : A)
-    Some.new(value)
-  end
-
-  def >=(block : A -> Option(B)) forall B
-    bind do |x|
-      block.call(x)
-    end
-  end
-
-  def >>(other : Option(B)) : Option(B) forall B
-    bind {|_| other}
-  end
-
-  def <<(other : Option(B)) : Option(A) forall B
-    bind {|_| self}
-  end
-
-  def apply(other : Option(B), &block : ((A, B)-> C)) : Option(C) forall B, C
+end
+module Applicative(A)
+  extend Functor(A)
+  def apply(other : Applicative(B), &block : ((A, B)-> C)) : Applicative(C) forall B, C
     bind {|a|
       other.bind { |b| 
         Some.new(block.call a, b)
       }
     }
   end
+
+  def self.pure(value : A) : Applicative(A)
+    raise "pure method unimplemented"
+  end
+end
+
+module Monad(A)
+  extend Applicative(A)
+  abstract def bind(&block : A -> Monad(B)) : Monad(B) forall B 
+
+  def map(&block : A -> B) : Monad(B) forall B
+    bind {|x|
+      typeof(self).pure(yield x)
+    }
+  end
+
+  def >=(block : A -> Monad(B)) : Monad(B) forall B
+    bind do |x|
+      block.call(x)
+    end
+  end
+
+  def >>(other : Monad(B)) : Monad(B) forall B
+    bind {|_| other}
+  end
+
+  def <<(other : Monad(B)) : Monad(A) forall B
+    bind {|_| self}
+  end
+end
+
+abstract class Option(A)
+  include Monad(A)
+  abstract def to_s
+
+  def self.pure(value : A) : Option(A)
+    Some.new(value)
+  end
 end
 
 class Some(A) < Option(A)
   def initialize(@value : A)
-  end
-
-  def map(&block : A -> B) : Option(B) forall B
-    Some.new(yield @value)
   end
 
   def bind(&block)
@@ -49,11 +66,6 @@ end
 
 class None(A) < Option(A)
   def initialize
-  end
-
-  def map(&block : A -> B) : Option(B) forall B
-    return None(T).new
-    yield
   end
 
   def bind(&block : A -> Option(B)) : Option(B) forall B
@@ -95,12 +107,9 @@ a = Some.new(1)
 
 b = Some.new(23)
 
-x = None(Int32).new().bind do |x|
-  Some.new(x && false)
-end
 
 # pp (Some.new(345) << Some.new(34))
-# print mdo({
+# puts mdo({
 #   x =~ Some.new(32),
 #   b = x <= 32,
 #   p =~ Some.new(23),
@@ -133,7 +142,18 @@ macro ap(typ, call)
     }
   {% end %}
 end
+
+# macro curry(func_def)
+#   {{func_def}}
+# end
+
+# curry(def add(x, y)
+#   x + y
+# end)
+
 # Some.new(1).apply Some.new(2), f
+asdf : Monad(Int32) = Some.new(1).map {|x| x+1}
+puts asdf.to_s
 puts ap(Option, f Some.new(1), Some.new(2), Some.new(3), Some.new(4)).to_s
 
 # print (a = 23)
