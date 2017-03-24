@@ -105,7 +105,7 @@ end
 
 a = Some.new(1)
 
-b = Some.new(23)
+b = Some.new(23).map {|x| x + 1}
 
 
 # pp (Some.new(345) << Some.new(34))
@@ -143,6 +143,48 @@ macro ap(call)
   {% end %}
 end
 
+macro data(args)
+  # base class
+  class {{args[0]}}
+  end
+
+  # variants (subclasses)
+  {% for i in 1...args.size %}
+    {% if args[i].class_name == "Path" %}
+      class {{args[i].names[0]}}(
+          {{args[0].type_vars[0]}}
+          {% for j in 1...args[0].type_vars.size %}
+            , {{args[0].type_vars[j]}}
+          {% end %}
+        ) < {{args[0]}}
+        def initialize
+        end
+      end
+    {% else %}
+      class {{args[i].name}}(
+          {{args[0].type_vars[0]}}
+          {% for j in 1...args[0].type_vars.size %}
+            , {{args[0].type_vars[j]}}
+          {% end %}
+        ) < {{args[0]}}
+        def initialize(
+          {% for j in 0...args[i].type_vars.size-1 %}
+            @value{{j}} : {{args[i].type_vars[j]}},
+          {% end %}
+          @value{{args[i].type_vars.size - 1}} : {{args[i].type_vars[args[i].type_vars.size - 1]}}
+        )
+        end
+      end
+    {% end %}
+  {% end %}
+  {{debug()}}
+end
+data({List(A),
+  Empty,
+  Cons(A, List(A))
+})
+
+
 # macro curry(func_def)
 #   {{func_def}}
 # end
@@ -152,8 +194,8 @@ end
 # end)
 
 # Some.new(1).apply Some.new(2), f
-asdf : Monad(Int32) = Some.new(1).map {|x| x+1}
-puts asdf.to_s
-puts ap(f Some.new(1), Some.new(2), Some.new(3), Some.new(4)).to_s
+# asdf : Monad(Int32) = Some.new(1).map {|x| x+1}
+# puts asdf.to_s
+# puts ap(f Some.new(1), Some.new(2), Some.new(3), Some.new(4)).to_s
 
 # print (a = 23)
