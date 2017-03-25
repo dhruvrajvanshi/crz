@@ -149,51 +149,21 @@ macro adt(base, args)
   {% else %}
     {% base_class = base.name.names[0] %}
   {% end %}
-  # base class {{args[0]}}
-  macro match_{{base_class.underscore}}(val, cases)
-    -> {
-      %value = \{{val}}
-      %matcher_func = -> {
-        \{% for lhs in cases.keys %}
-          \{% if lhs.class_name == "Underscore" %}
-              return \{{cases[lhs]}}
-          \{% else %}
-            \{% if lhs.class_name == "Path" %}
-              \{% 
-                lhs_class = lhs.names[0]
-               %}
-            \{% else %}
-              \{%
-                 lhs_class = lhs[0].names[0]
-               %}
-            \{% end %}
 
-            if %value.is_a? {{base_class}}::\{{lhs_class}}
-              ## bind values
-              \{% if lhs.class_name != "Path" %}
-                \{% for i in 1...lhs.size %}
-                  \{{lhs[i]}} = %value.as({{base_class}}::\{{lhs_class}}).value\{{i-1}}
-                \{% end %}
-              \{% end %}
-              return \{{cases[lhs]}}
-            end
-          \{% end %}
-        \{% end %}
-        raise ArgumentError.new("Non exhaustive patterns passed to match_" + {{base_class.underscore.stringify}})
-      }
-      %matcher_func.call()
-    }.call
-  end
+  # base class
   abstract class {{base}}
+
     {% if base.class_name == "Path" %}
       # non generic base
       {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %}
+          # subclass with no members
           class {{args[i].names[0]}} < {{base}}
             def initialize
             end
           end
         {% else %}
+          # subclass with members
           class {{args[i].name}} < {{base}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
@@ -242,6 +212,41 @@ macro adt(base, args)
         {% end %}
       {% end %}
     {% end %}
+
+    macro match(val, cases)
+      -> {
+        %value = \{{val}}
+        %matcher_func = -> {
+          \{% for lhs in cases.keys %}
+            \{% if lhs.class_name == "Underscore" %}
+                return \{{cases[lhs]}}
+            \{% else %}
+              \{% if lhs.class_name == "Path" %}
+                \{% 
+                  lhs_class = lhs.names[0]
+                 %}
+              \{% else %}
+                \{%
+                   lhs_class = lhs[0].names[0]
+                 %}
+              \{% end %}
+
+              if %value.is_a? {{base_class}}::\{{lhs_class}}
+                ## bind values
+                \{% if lhs.class_name != "Path" %}
+                  \{% for i in 1...lhs.size %}
+                    \{{lhs[i]}} = %value.as({{base_class}}::\{{lhs_class}}).value\{{i-1}}
+                  \{% end %}
+                \{% end %}
+                return \{{cases[lhs]}}
+              end
+            \{% end %}
+          \{% end %}
+          raise ArgumentError.new("Non exhaustive patterns passed to match_" + {{base_class.underscore.stringify}})
+        }
+        %matcher_func.call()
+      }.call
+    end
   end
 end
 
@@ -269,7 +274,7 @@ adt Result(A, E), {
 }
 
 
-puts match_result Result::Err(Int32, String).new("Error occured"), {
+puts Result.match Result::Ok(Int32, String).new(23), {
   [Ok, x] => "Ok(#{x})",
   [Err, err] => "Err(#{err})"
 }
@@ -285,7 +290,7 @@ puts match_result Result::Err(Int32, String).new("Error occured"), {
 #   [Cons, x, xs] => xs
 # })
 
-puts match_list (List::Cons.new(true, List::Empty(Bool).new)), {
+puts List.match (List::Cons.new(true, List::Empty(Bool).new)), {
   [Cons, x, xs] => "Empty"
 }
 
@@ -348,45 +353,12 @@ macro adt_class(base_type, args, cls_dec)
   {% else %}
     {% base_class = base_type.name.names[0] %}
   {% end %}
-  macro match_{{base_class.underscore}}(val, cases)
-    -> {
-      %value = \{{val}}
-      %matcher_func = -> {
-        \{% for lhs in cases.keys %}
-          \{% if lhs.class_name == "Underscore" %}
-              return \{{cases[lhs]}}
-          \{% else %}
-            \{% if lhs.class_name == "Path" %}
-              \{% 
-                lhs_class = lhs.names[0]
-               %}
-            \{% else %}
-              \{%
-                 lhs_class = lhs[0].names[0]
-               %}
-            \{% end %}
+  
 
-            if %value.is_a? {{base_class}}::\{{lhs_class}}
-              ## bind values
-              \{% if lhs.class_name != "Path" %}
-                \{% for i in 1...lhs.size %}
-                  \{{lhs[i]}} = %value.as({{base_class}}::\{{lhs_class}}).value\{{i-1}}
-                \{% end %}
-              \{% end %}
-              return \{{cases[lhs]}}
-            end
-          \{% end %}
-        \{% end %}
-        raise ArgumentError.new("Non exhaustive patterns passed to match_" + {{base_class.underscore.stringify}})
-      }
-      %matcher_func.call()
-    }.call
-    \{{debug()}}
-  end
-
-  {{cls_dec.id}}
+  {{cls_dec}}
 
   abstract class {{base_type}} < ADT{{base_type}}
+    
     {% if base_type.class_name == "Path" %}
       # non generic base
       {% for i in 0...args.size %}
@@ -444,6 +416,41 @@ macro adt_class(base_type, args, cls_dec)
         {% end %}
       {% end %}
     {% end %}
+
+    macro match(val, cases)
+      -> {
+        %value = \{{val}}
+        %matcher_func = -> {
+          \{% for lhs in cases.keys %}
+            \{% if lhs.class_name == "Underscore" %}
+                return \{{cases[lhs]}}
+            \{% else %}
+              \{% if lhs.class_name == "Path" %}
+                \{% 
+                  lhs_class = lhs.names[0]
+                 %}
+              \{% else %}
+                \{%
+                   lhs_class = lhs[0].names[0]
+                 %}
+              \{% end %}
+
+              if %value.is_a? {{base_class}}::\{{lhs_class}}
+                ## bind values
+                \{% if lhs.class_name != "Path" %}
+                  \{% for i in 1...lhs.size %}
+                    \{{lhs[i]}} = %value.as({{base_class}}::\{{lhs_class}}).value\{{i-1}}
+                  \{% end %}
+                \{% end %}
+                return \{{cases[lhs]}}
+              end
+            \{% end %}
+          \{% end %}
+          raise ArgumentError.new("Non exhaustive patterns passed to match_" + {{base_class.underscore.stringify}})
+        }
+        %matcher_func.call()
+      }.call
+    end
   end
 end
 
@@ -464,7 +471,6 @@ abstract class ADTOptional(A)
   end
 
   def bind(&block : A -> Optional(B)) : Optional(B) forall B
-
     if(self.is_a? Optional::Some(A))
       yield self.value0
     elsif (self.is_a? Optional::None(A))
@@ -482,8 +488,8 @@ o = mdo({
   b_s = b.to_s,
   Optional::Some.new(a_s + ":" + b_s)
 }).map {|x| x + "asdf"}
-result = match_optional o, {
-  Some(x) => "Some(#{x})",
+result = Optional.match o, {
+  [Some, x] => "Some(#{x})",
   _ => "Nothing"
 }
 puts result
