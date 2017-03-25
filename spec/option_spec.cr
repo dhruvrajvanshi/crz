@@ -84,6 +84,43 @@ describe Option do
 
     (lift_apply sum, Option.pure(1), Option::None(Int32).new, Option.pure(2)).has_value.should eq false
   end
+
+  it "works as a monad" do
+    (Option.pure(1).bind { |x| Option.pure(x + 1) }).unwrap.should eq 2
+    (Option::None(Int32).new.bind { |x| Option.pure(x + 1) }).has_value.should eq false
+    (Option.pure(1).bind { |x| Option::None(Int32).new }).has_value.should eq false
+
+    # mdo({
+    #   x <= Option.pure(1),
+    #   y <= Option.pure(2),
+    #   Option.pure(x + y),
+    # }).unwrap.should eq 3
+
+    # mdo({
+    #   x <= Option.pure(1),
+    #   a = x + 1,
+    #   y <= Option.pure(2),
+    #   Option.pure(a + y),
+    # }).unwrap.should eq 4
+    # mdo({
+    #   x <= Option.pure(1),
+    #   y <= Option::None(Int32).new,
+    #   z <= Option.pure(2),
+    #   Option.pure(x + y + z),
+    # }).has_value.should eq false
+
+    # mdo({
+    #   x <= Option.pure(1),
+    #   y <= mdo({
+    #     a <= Option.pure(3),
+    #     b <= Option.pure(3),
+    #     c = 4,
+    #     Option.pure(a + b + c),
+    #   }),
+    #   z <= Option.pure(2),
+    #   Option.pure(x + y + z),
+    # }).unwrap.should eq 13
+  end
 end
 
 def sum(*args)

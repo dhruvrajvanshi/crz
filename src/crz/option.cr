@@ -35,7 +35,7 @@ module CRZ::Containers
       def bind(&block : A -> Option(B)) : Option(B) forall B
         # Option.match self, {
         #   [Some, x] => (block.call x),
-        #   [None]    => Option::None(B).new
+        #   [None]    => Option::None(B).new,
         # }
         if (self.is_a? Option::Some(A))
           yield self.value0
