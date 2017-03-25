@@ -143,7 +143,7 @@ macro ap(call)
   {% end %}
 end
 
-macro data(base, args)
+macro variant(base, args)
   {% if base[0].class_name == "Path" %}
     {% base_class = base[0].names[0] %}
   {% else %}
@@ -184,7 +184,7 @@ macro data(base, args)
       %matcher_func.call()
     }.call
   end
-  class {{base[0]}}
+  abstract class {{base[0]}}
     {% if base[0].class_name == "Path" %}
       # non generic base
       {% for i in 0...args.size %}
@@ -250,12 +250,12 @@ end
 #   {% if matcher %}
 # end
 
-data [IntList], {
+variant [IntList], {
   Empty,
   Cons(Int32, IntList)
 }
 
-data [List(A)], {
+variant [List(A)], {
   Empty,
   Cons(A, List(A))
 }
@@ -328,13 +328,12 @@ puts match_list (List::Cons.new(true, List::Empty(Bool).new)), {
 # print (a = 23)
 
 
-macro data_class(base, args)
+macro variant_module(base, args, cls_dec)
   {% if base[0].class_name == "Path" %}
     {% base_class = base[0].names[0] %}
   {% else %}
     {% base_class = base[0].name.names[0] %}
   {% end %}
-  # base class {{args[0]}}
   macro match_{{base_class.underscore}}(val, cases)
     %value = \{{val}}  
     -> {
@@ -368,18 +367,24 @@ macro data_class(base, args)
       }
       %matcher_func.call()
     }.call
+    \{{debug()}}
   end
-  class {{base[0]}}
+
+  {{cls_dec.id}}
+
+  module {{base[0]}}
     {% if base[0].class_name == "Path" %}
       # non generic base
       {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %}
-          class {{args[i].names[0]}} < {{base[0]}}
+          class {{args[i].names[0]}}
+              include {{base[0]}}
             def initialize
             end
           end
         {% else %}
-          class {{args[i].name}} < {{base[0]}}
+          class {{args[i].name}}
+              include {{base[0]}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
             {% end %}
@@ -402,7 +407,8 @@ macro data_class(base, args)
               {% for j in 1...base[0].type_vars.size %}
                 , {{base[0].type_vars[j]}}
               {% end %}
-            ) < {{base[0]}}
+            )
+            include {{base[0]}}
             def initialize
             end
           end
@@ -412,7 +418,8 @@ macro data_class(base, args)
               {% for j in 1...base[0].type_vars.size %}
                 , {{base[0].type_vars[j]}}
               {% end %}
-            ) < {{base[0]}}
+            )
+            include {{base[0]}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
             {% end %}
@@ -429,3 +436,20 @@ macro data_class(base, args)
     {% end %}
   end
 end
+
+variant_module [Optional(A)], {
+  Some(A), None
+},
+module Optional(A)
+  def to_s
+    match_optional(self, {
+      [Some, x] => "Some(#{x})",
+      [None] => "None"
+    })
+  end
+end
+
+puts Optional::Some.new(2).to_s
+
+# puts variantA::Some.new(2).to_s
+# puts variantOptional::Some(1)
