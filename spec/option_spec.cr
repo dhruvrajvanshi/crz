@@ -36,13 +36,13 @@ describe Option do
       x.should eq 34
       x + 1
     end
-    Option.match mapped, {
+    Option.match mapped, Option(Int32), {
       [Some, x] => (x.should eq 35),
       _         => (1.should eq 2),
     }
 
     string_option = mapped.map &.to_s
-    Option.match string_option, {
+    Option.match string_option, Option(String), {
       [Some, x] => (x.should eq "35"),
       _         => (1.should eq 2),
     }
@@ -53,7 +53,7 @@ describe Option do
       x + 3
     end
 
-    Option.match mapped, {
+    Option.match mapped, Option(Int32), {
       [Some, x] => (1.should eq 2),
       [None]    => (1.should eq 1),
     }
@@ -90,36 +90,36 @@ describe Option do
     (Option::None(Int32).new.bind { |x| Option.pure(x + 1) }).has_value.should eq false
     (Option.pure(1).bind { |x| Option::None(Int32).new }).has_value.should eq false
 
-    # mdo({
-    #   x <= Option.pure(1),
-    #   y <= Option.pure(2),
-    #   Option.pure(x + y),
-    # }).unwrap.should eq 3
+    mdo({
+      x <= Option.pure(1),
+      y <= Option.pure(2),
+      Option.pure(x + y),
+    }).unwrap.should eq 3
 
-    # mdo({
-    #   x <= Option.pure(1),
-    #   a = x + 1,
-    #   y <= Option.pure(2),
-    #   Option.pure(a + y),
-    # }).unwrap.should eq 4
-    # mdo({
-    #   x <= Option.pure(1),
-    #   y <= Option::None(Int32).new,
-    #   z <= Option.pure(2),
-    #   Option.pure(x + y + z),
-    # }).has_value.should eq false
+    mdo({
+      x <= Option.pure(1),
+      a = x + 1,
+      y <= Option.pure(2),
+      Option.pure(a + y),
+    }).unwrap.should eq 4
+    mdo({
+      x <= Option.pure(1),
+      y <= Option::None(Int32).new,
+      z <= Option.pure(2),
+      Option.pure(x + y + z),
+    }).has_value.should eq false
 
-    # mdo({
-    #   x <= Option.pure(1),
-    #   y <= mdo({
-    #     a <= Option.pure(3),
-    #     b <= Option.pure(3),
-    #     c = 4,
-    #     Option.pure(a + b + c),
-    #   }),
-    #   z <= Option.pure(2),
-    #   Option.pure(x + y + z),
-    # }).unwrap.should eq 13
+    mdo({
+      x <= Option.pure(1),
+      y <= mdo({
+        a <= Option.pure(3),
+        b <= Option.pure(3),
+        c = 4,
+        Option.pure(a + b + c),
+      }),
+      z <= Option.pure(2),
+      Option.pure(x + y + z),
+    }).unwrap.should eq 13
   end
 end
 

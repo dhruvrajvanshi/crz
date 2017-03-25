@@ -32,10 +32,10 @@ module CRZ
       end
     end
 
-    def map(&block : A -> B) : Option(B) forall B
-      bind { |x|
+    def map(&block : A -> B) : Monad(B) forall B
+      bind do |x|
         typeof(self).pure(block.call x)
-      }
+      end
     end
 
     def >=(block : A -> Monad(B)) : Monad(B) forall B
