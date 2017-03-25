@@ -73,8 +73,14 @@ describe Option do
     noop = Option::None(Int32 -> Int32).new
     some12.ap(noop).has_value.should eq false
 
-    f = ->(x : Int32, y : Int32) {
-      x + y
-    }
+    # f = ->(x : Int32, y : Int32) {
+    #   x + y
+    # }
+
+    (lift_apply [f, some12, Option.pure(2)]).unwrap.should eq 14
   end
+end
+
+def f(x, y)
+  x + y
 end
