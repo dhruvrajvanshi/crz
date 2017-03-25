@@ -143,7 +143,7 @@ macro ap(call)
   {% end %}
 end
 
-macro variant(base, args)
+macro adt(base, args)
   {% if base[0].class_name == "Path" %}
     {% base_class = base[0].names[0] %}
   {% else %}
@@ -250,12 +250,12 @@ end
 #   {% if matcher %}
 # end
 
-variant [IntList], {
+adt [IntList], {
   Empty,
   Cons(Int32, IntList)
 }
 
-variant [List(A)], {
+adt [List(A)], {
   Empty,
   Cons(A, List(A))
 }
@@ -298,7 +298,7 @@ puts match_list (List::Cons.new(true, List::Empty(Bool).new)), {
 #   end
 # end
 
-# # variants (subclasses)
+# # adts (subclasses)
 # class Empty(A) < List(A)
 #   def initialize
 #   end
@@ -328,7 +328,7 @@ puts match_list (List::Cons.new(true, List::Empty(Bool).new)), {
 # print (a = 23)
 
 
-macro variant_module(base, args, cls_dec)
+macro adt_module(base, args, cls_dec)
   {% if base[0].class_name == "Path" %}
     {% base_class = base[0].names[0] %}
   {% else %}
@@ -437,7 +437,7 @@ macro variant_module(base, args, cls_dec)
   end
 end
 
-variant_module [Optional(A)], {
+adt_module [Optional(A)], {
   Some(A), None
 },
 module Optional(A)
@@ -451,5 +451,5 @@ end
 
 puts Optional::Some.new(2).to_s
 
-# puts variantA::Some.new(2).to_s
-# puts variantOptional::Some(1)
+# puts adtA::Some.new(2).to_s
+# puts adtOptional::Some(1)
