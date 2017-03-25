@@ -1,0 +1,2 @@
+require "../src/crz"
+require "./*"
