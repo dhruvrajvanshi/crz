@@ -242,7 +242,7 @@ macro adt(base, args)
               end
             \{% end %}
           \{% end %}
-          raise ArgumentError.new("Non exhaustive patterns passed to match_" + {{base_class.underscore.stringify}})
+          raise ArgumentError.new("Non exhaustive patterns passed to" + {{base_class.underscore.stringify}} + ".match")
         }
         %matcher_func.call()
       }.call
@@ -291,7 +291,8 @@ puts Result.match Result::Ok(Int32, String).new(23), {
 # })
 
 puts List.match (List::Cons.new(true, List::Empty(Bool).new)), {
-  [Cons, x, xs] => "Empty"
+  [Cons, x, xs] => "Empty",
+  [Empty] => "Empty",
 }
 
 # puts match((List::Cons.new 1, List::Empty(Int32).new), {
@@ -446,7 +447,7 @@ macro adt_class(base_type, args, cls_dec)
               end
             \{% end %}
           \{% end %}
-          raise ArgumentError.new("Non exhaustive patterns passed to match_" + {{base_class.underscore.stringify}})
+          raise ArgumentError.new("Non exhaustive patterns passed to" + {{base_class.underscore.stringify}} + ".match")
         }
         %matcher_func.call()
       }.call
@@ -460,10 +461,10 @@ adt_class Optional(A), {
 abstract class ADTOptional(A)
   include Monad(A)
   def to_s
-    match_optional(self, {
+    Optional.match self, {
       [Some, x] => "Some(#{x})",
       [None]    => "None"
-    })
+    }
   end
 
   def self.pure(value : T) : Optional(T) forall T
@@ -471,6 +472,7 @@ abstract class ADTOptional(A)
   end
 
   def bind(&block : A -> Optional(B)) : Optional(B) forall B
+
     if(self.is_a? Optional::Some(A))
       yield self.value0
     elsif (self.is_a? Optional::None(A))
