@@ -77,12 +77,12 @@ describe Option do
       x + y
     }
 
-    (lift_apply f.call, [some12, Option.pure(2)]).unwrap.should eq 14
-    (lift_apply sum, [some12, Option.pure(2)]).unwrap.should eq 14
+    (lift_apply f.call, some12, Option.pure(2)).unwrap.should eq 14
+    (lift_apply sum, some12, Option.pure(2)).unwrap.should eq 14
 
-    (lift_apply sum, [Option.pure(1), Option.pure(2), Option.pure(3)]).unwrap.should eq 6
+    (lift_apply sum, Option.pure(1), Option.pure(2), Option.pure(3)).unwrap.should eq 6
 
-    (lift_apply sum, [Option.pure(1), Option::None(Int32).new, Option.pure(2)]).has_value.should eq false
+    (lift_apply sum, Option.pure(1), Option::None(Int32).new, Option.pure(2)).has_value.should eq false
   end
 end
 

@@ -1,5 +1,5 @@
 module CRZ
-  macro lift_apply(f, args)
+  macro lift_apply(f, *args)
     {% for i in 0...args.size %}
       {{args[i]}}.bind { |arg{{i}}|
     {% end %}
