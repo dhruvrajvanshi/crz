@@ -147,6 +147,7 @@ macro data(args)
   # base class {{args[0]}}
   class {{args[0]}}
     {% if args[0].class_name == "Path" %}
+      # non generic base
       {% for i in 1...args.size %}
         {% if args[i].class_name == "Path" %}
           class {{args[i].names[0]}} < {{args[0]}}
@@ -166,6 +167,7 @@ macro data(args)
         {% end %}
       {% end %}
     {% else %}
+      # generic base
       {% for i in 1...args.size %}
         {% if args[i].class_name == "Path" %}
           class {{args[i].names[0]}}(
@@ -201,15 +203,19 @@ macro data(args)
   {{debug()}}
 end
 
-data({List(A),
-  Empty,
-  Cons(A, List(A))
-})
 
+# macro matcher_body(args)
+#   {% if matcher %}
+# end
 
 data({IntList,
   Empty,
   Cons(Int32, IntList)
+})
+
+data({List(A),
+  Empty,
+  Cons(A, List(A))
 })
 
 
