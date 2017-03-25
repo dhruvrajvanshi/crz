@@ -1,5 +1,5 @@
 module CRZ
-  macro ap(call)
+  macro lift_application(call)
     {% if call.class_name != "Call" %}
       {{call.raise "First argument to ap must be a function name"}}
     {% end %}

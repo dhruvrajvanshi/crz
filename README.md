@@ -17,7 +17,8 @@ Features include
 * Make working with algebraic types type safe and easy using pattern matching.
 
 ## Roadmap
-* Write tests
-* Write documentation
-* Make ADT base type a module instead of an abstract class
-* Implement Result and Future types
+* Write tests.
+* Write documentation.
+* Make ADT base type a module instead of an abstract class.
+* Implement Result and Future types.
+* Improve compile time error messages for macros.

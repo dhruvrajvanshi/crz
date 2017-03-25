@@ -82,9 +82,15 @@ module CRZ
                     lhs_class = lhs.names[0]
                    %}
                 \{% else %}
-                  \{%
-                     lhs_class = lhs[0].names[0]
-                   %}
+                  \{% if lhs[0].class_name == "Underscore" %}
+                    \{% lhs_class = "_"
+                      %}
+                    return \{{cases[lhs]}}
+                  \{% else %}
+                    \{%
+                       lhs_class = lhs[0].names[0]
+                     %}
+                  \{% end %}
                 \{% end %}
 
                 if %value.is_a? {{base_class}}::\{{lhs_class}}
@@ -189,9 +195,13 @@ module CRZ
                     lhs_class = lhs.names[0]
                    %}
                 \{% else %}
-                  \{%
-                     lhs_class = lhs[0].names[0]
-                   %}
+                  \{% if lhs[0].class_name == "Underscore" %}
+                    return \{{cases[lhs]}}
+                  \{% else %}
+                    \{%
+                       lhs_class = lhs[0].names[0]
+                     %}
+                  \{% end %}
                 \{% end %}
 
                 if %value.is_a? {{base_class}}::\{{lhs_class}}

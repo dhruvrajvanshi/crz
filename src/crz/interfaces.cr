@@ -2,15 +2,18 @@ module CRZ
   module Functor(A)
     abstract def map(&block : A -> B) : Functor(B) forall B
 
+    def replace(other : Functor(B), v : A) : Functor(A)
+      map { |_| v }
+    end
   end
+
   module Applicative(A)
     include Functor(A)
-    def apply(other : Applicative(B), &block : ((A, B)-> C)) : Applicative(C) forall B, C
-      bind {|a|
-        other.bind { |b| 
-          Some.new(block.call a, b)
-        }
-      }
+
+    abstract def ap(func : Applicative(A -> B)) : Applicative(B) forall B
+
+    def *(func : Applicative(A -> B)) : Applicative(B) forall B
+      ap(func)
     end
 
     def self.pure(value : A) : Applicative(A)
@@ -20,10 +23,17 @@ module CRZ
 
   module Monad(A)
     include Applicative(A)
-    abstract def bind(&block : A -> Monad(B)) : Monad(B) forall B 
 
-    def map(&block : A -> B) : Monad(B) forall B
-      bind {|x|
+    abstract def bind(&block : A -> Monad(B)) : Monad(B) forall B
+
+    def ap(func : Applicative(A -> B)) : Applicative(B) forall B
+      func.bind do |f|
+        self.map &f
+      end
+    end
+
+    def map(&block : A -> B) : Option(B) forall B
+      bind { |x|
         typeof(self).pure(block.call x)
       }
     end
@@ -35,11 +45,11 @@ module CRZ
     end
 
     def >>(other : Monad(B)) : Monad(B) forall B
-      bind {|_| other}
+      bind { |_| other }
     end
 
     def <<(other : Monad(B)) : Monad(A) forall B
-      bind {|_| self}
+      bind { |_| self }
     end
   end
 end

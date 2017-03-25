@@ -18,6 +18,20 @@ module CRZ::Containers
         Option::Some.new(value)
       end
 
+      def unwrap : A
+        Option.match self, {
+          [Some, x] => x,
+          [None]    => raise Exception.new("Tried to unwrap Option::None value"),
+        }
+      end
+
+      def has_value : Bool
+        Option.match self, {
+          [Some, _] => true,
+          [_]       => false,
+        }
+      end
+
       def bind(&block : A -> Option(B)) : Option(B) forall B
         # Option.match self, {
         #   [Some, x] => (block.call x),
