@@ -144,7 +144,41 @@ macro ap(call)
 end
 
 macro data(base, args)
+  {% if base[0].class_name == "Path" %}
+    {% base_class = base[0].names[0] %}
+  {% else %}
+    {% base_class = base[0].name.names[0] %}
+  {% end %}
   # base class {{args[0]}}
+  macro match_{{base_class.underscore}}(val, cases)
+    %value = \{{val}}  
+    -> {
+      %matcher_func = -> {
+        \{% for lhs in cases.keys %}
+          \{% if lhs.class_name == "Path" %}
+            \{% 
+              lhs_class = lhs.names[0]
+             %}
+          \{% else %}
+            \{%
+               lhs_class = lhs[0].names[0]
+             %}
+          \{% end %}
+
+          if \{{val}}.is_a? {{base_class}}::\{{lhs_class}}
+            ## bind values
+            \{% if lhs.class_name != "Path" %}
+              \{% for i in 1...lhs.size %}
+                \{{lhs[i]}} = %value.as({{base_class}}::\{{lhs_class}}).value\{{i-1}}
+              \{% end %}
+            \{% end %}
+            return \{{cases[lhs]}}
+          end
+        \{% end %}
+      }
+      %matcher_func.call()
+    }.call
+  end
   class {{base[0]}}
     {% if base[0].class_name == "Path" %}
       # non generic base
@@ -156,6 +190,9 @@ macro data(base, args)
           end
         {% else %}
           class {{args[i].name}} < {{base[0]}}
+            {% for j in 0...args[i].type_vars.size %}
+              property value{{j}}
+            {% end %}
             def initialize(
               {% for j in 0...args[i].type_vars.size-1 %}
                 @value{{j}} : {{args[i].type_vars[j]}},
@@ -169,7 +206,7 @@ macro data(base, args)
     {% else %}
       # generic base
       {% for i in 0...args.size %}
-        {% if args[i].class_name == "Path" %}
+        {% if args[i].class_name == "Path" %} # constructor with no value types
           class {{args[i].names[0]}}(
               {{base[0].type_vars[0]}}
               {% for j in 1...base[0].type_vars.size %}
@@ -179,13 +216,16 @@ macro data(base, args)
             def initialize
             end
           end
-        {% else %}
+        {% else %} # intersection type
           class {{args[i].name}}(
               {{base[0].type_vars[0]}}
               {% for j in 1...base[0].type_vars.size %}
                 , {{base[0].type_vars[j]}}
               {% end %}
             ) < {{base[0]}}
+            {% for j in 0...args[i].type_vars.size %}
+              property value{{j}}
+            {% end %}
             def initialize(
               {% for j in 0...args[i].type_vars.size-1 %}
                 @value{{j}} : {{args[i].type_vars[j]}},
@@ -198,9 +238,6 @@ macro data(base, args)
       {% end %}
     {% end %}
   end
-
-  # variants (subclasses)
-  {{debug()}}
 end
 
 
@@ -208,18 +245,36 @@ end
 #   {% if matcher %}
 # end
 
-data([IntList], {
+data [IntList], {
   Empty,
   Cons(Int32, IntList)
-})
+}
 
-data([List(A)], {
+data [List(A)], {
   Empty,
   Cons(A, List(A))
-})
+}
 
 
-pp List::Cons.new 1, List::Empty(Int32).new
+# puts match_list(List::Empty(Int32).new, {
+#   Empty => 1,
+#   Cons {x, xs} => 3
+# })
+
+# puts match_int_list((IntList::Cons.new 2, IntList::Empty.new), {
+#   [Empty] => 1,
+#   [Cons, x, xs] => xs
+# })
+
+puts match_list (List::Cons.new(true, List::Empty(Bool).new)), {
+  [Empty] => "Empty",
+  [Cons, x, xs] => x
+}
+
+# puts match((List::Cons.new 1, List::Empty(Int32).new), {
+#     Empty =~ 1,
+#     Cons [x, xs] =~ x
+#   })
 
 # matcher({List(A),
 #   Empty,
