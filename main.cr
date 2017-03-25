@@ -143,19 +143,19 @@ macro ap(call)
   {% end %}
 end
 
-macro data(args)
+macro data(base, args)
   # base class {{args[0]}}
-  class {{args[0]}}
-    {% if args[0].class_name == "Path" %}
+  class {{base[0]}}
+    {% if base[0].class_name == "Path" %}
       # non generic base
-      {% for i in 1...args.size %}
+      {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %}
-          class {{args[i].names[0]}} < {{args[0]}}
+          class {{args[i].names[0]}} < {{base[0]}}
             def initialize
             end
           end
         {% else %}
-          class {{args[i].name}} < {{args[0]}}
+          class {{args[i].name}} < {{base[0]}}
             def initialize(
               {% for j in 0...args[i].type_vars.size-1 %}
                 @value{{j}} : {{args[i].type_vars[j]}},
@@ -168,24 +168,24 @@ macro data(args)
       {% end %}
     {% else %}
       # generic base
-      {% for i in 1...args.size %}
+      {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %}
           class {{args[i].names[0]}}(
-              {{args[0].type_vars[0]}}
-              {% for j in 1...args[0].type_vars.size %}
-                , {{args[0].type_vars[j]}}
+              {{base[0].type_vars[0]}}
+              {% for j in 1...base[0].type_vars.size %}
+                , {{base[0].type_vars[j]}}
               {% end %}
-            ) < {{args[0]}}
+            ) < {{base[0]}}
             def initialize
             end
           end
         {% else %}
           class {{args[i].name}}(
-              {{args[0].type_vars[0]}}
-              {% for j in 1...args[0].type_vars.size %}
-                , {{args[0].type_vars[j]}}
+              {{base[0].type_vars[0]}}
+              {% for j in 1...base[0].type_vars.size %}
+                , {{base[0].type_vars[j]}}
               {% end %}
-            ) < {{args[0]}}
+            ) < {{base[0]}}
             def initialize(
               {% for j in 0...args[i].type_vars.size-1 %}
                 @value{{j}} : {{args[i].type_vars[j]}},
@@ -208,12 +208,12 @@ end
 #   {% if matcher %}
 # end
 
-data({IntList,
+data([IntList], {
   Empty,
   Cons(Int32, IntList)
 })
 
-data({List(A),
+data([List(A)], {
   Empty,
   Cons(A, List(A))
 })
