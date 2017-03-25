@@ -101,7 +101,6 @@ macro mdo(body)
     end
   {% end %}
   end
-  {{debug()}}
 end
 
 a = Some.new(1)
@@ -152,8 +151,8 @@ macro adt(base, args)
   {% end %}
   # base class {{args[0]}}
   macro match_{{base_class.underscore}}(val, cases)
-    %value = \{{val}}  
     -> {
+      %value = \{{val}}
       %matcher_func = -> {
         \{% for lhs in cases.keys %}
           \{% if lhs.class_name == "Underscore" %}
@@ -350,8 +349,8 @@ macro adt_class(base_type, args, cls_dec)
     {% base_class = base_type.name.names[0] %}
   {% end %}
   macro match_{{base_class.underscore}}(val, cases)
-    %value = \{{val}}  
     -> {
+      %value = \{{val}}
       %matcher_func = -> {
         \{% for lhs in cases.keys %}
           \{% if lhs.class_name == "Underscore" %}
@@ -480,12 +479,11 @@ o = mdo({
   a <= Optional::Some.new(3),
   a_s = a.to_s,
   b <= Optional::Some.new(1),
-  z <= Optional::None(Bool).new(),
   b_s = b.to_s,
   Optional::Some.new(a_s + ":" + b_s)
 }).map {|x| x + "asdf"}
 result = match_optional o, {
-  [Some, x] => "Some(#{x})",
+  Some(x) => "Some(#{x})",
   _ => "Nothing"
 }
 puts result
