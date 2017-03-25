@@ -3,7 +3,7 @@ module Functor(A)
 
 end
 module Applicative(A)
-  extend Functor(A)
+  include Functor(A)
   def apply(other : Applicative(B), &block : ((A, B)-> C)) : Applicative(C) forall B, C
     bind {|a|
       other.bind { |b| 
@@ -18,12 +18,12 @@ module Applicative(A)
 end
 
 module Monad(A)
-  extend Applicative(A)
+  include Applicative(A)
   abstract def bind(&block : A -> Monad(B)) : Monad(B) forall B 
 
   def map(&block : A -> B) : Monad(B) forall B
     bind {|x|
-      typeof(self).pure(yield x)
+      typeof(self).pure(block.call x)
     }
   end
 
@@ -89,10 +89,10 @@ macro mdo(body)
       {{body[0].args[0]}}.bind do |__mdo_generated_{{i}}|
         {{body[i].target}} = {{body[i].value}}
     {% else %}
-      {% if body[i].class_name == "Call" && body[i].name == "=~" %}
+      {% if body[i].class_name == "Call" && body[i].name == "<=" %}
           {{body[i].args[0]}}.bind do |{{body[i].receiver}}|
       {% else %}
-        {{body[i].raise "Only =~ or = are allowed"}}
+        {{body[i].raise "Only <= or = are allowed"}}
       {% end %}
     {% end %}
   {% end %}
@@ -101,6 +101,7 @@ macro mdo(body)
     end
   {% end %}
   end
+  {{debug()}}
 end
 
 a = Some.new(1)
@@ -168,7 +169,7 @@ macro adt(base, args)
                %}
             \{% end %}
 
-            if \{{val}}.is_a? {{base_class}}::\{{lhs_class}}
+            if %value.is_a? {{base_class}}::\{{lhs_class}}
               ## bind values
               \{% if lhs.class_name != "Path" %}
                 \{% for i in 1...lhs.size %}
@@ -342,7 +343,7 @@ puts match_list (List::Cons.new(true, List::Empty(Bool).new)), {
 # print (a = 23)
 
 
-macro adt_module(base_type, args, cls_dec)
+macro adt_class(base_type, args, cls_dec)
   {% if base_type.class_name == "Path" %}
     {% base_class = base_type.names[0] %}
   {% else %}
@@ -366,7 +367,7 @@ macro adt_module(base_type, args, cls_dec)
                %}
             \{% end %}
 
-            if \{{val}}.is_a? {{base_class}}::\{{lhs_class}}
+            if %value.is_a? {{base_class}}::\{{lhs_class}}
               ## bind values
               \{% if lhs.class_name != "Path" %}
                 \{% for i in 1...lhs.size %}
@@ -386,19 +387,17 @@ macro adt_module(base_type, args, cls_dec)
 
   {{cls_dec.id}}
 
-  module {{base_type}}
+  abstract class {{base_type}} < ADT{{base_type}}
     {% if base_type.class_name == "Path" %}
       # non generic base
       {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %}
-          class {{args[i].names[0]}}
-              include {{base_type}}
+          class {{args[i].names[0]}} < {{base_type}}
             def initialize
             end
           end
         {% else %}
-          class {{args[i].name}}
-              include {{base_type}}
+          class {{args[i].name}} < {{base_type}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
             {% end %}
@@ -421,8 +420,7 @@ macro adt_module(base_type, args, cls_dec)
               {% for j in 1...base_type.type_vars.size %}
                 , {{base_type.type_vars[j]}}
               {% end %}
-            )
-            include {{base_type}}
+            ) < {{base_type}}
             def initialize
             end
           end
@@ -432,8 +430,7 @@ macro adt_module(base_type, args, cls_dec)
               {% for j in 1...base_type.type_vars.size %}
                 , {{base_type.type_vars[j]}}
               {% end %}
-            )
-            include {{base_type}}
+            ) < {{base_type}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
             {% end %}
@@ -451,19 +448,44 @@ macro adt_module(base_type, args, cls_dec)
   end
 end
 
-adt_module Optional(A), {
+adt_class Optional(A), {
   Some(A), None
 },
-module Optional(A)
+abstract class ADTOptional(A)
+  include Monad(A)
   def to_s
     match_optional(self, {
       [Some, x] => "Some(#{x})",
       [None]    => "None"
     })
   end
+
+  def self.pure(value : T) : Optional(T) forall T
+    Optional::Some.new(value)
+  end
+
+  def bind(&block : A -> Optional(B)) : Optional(B) forall B
+
+    if(self.is_a? Optional::Some(A))
+      yield self.value0
+    elsif (self.is_a? Optional::None(A))
+      Optional::None(B).new
+    else
+      raise Exception.new("Optional#bind called for unknown subtype of Optional #{typeof(self)}")
+    end
+  end
 end
 
-puts Optional::Some.new(2).to_s
-
-# puts adtA::Some.new(2).to_s
-# puts adtOptional::Some(1)
+o = mdo({
+  a <= Optional::Some.new(3),
+  a_s = a.to_s,
+  b <= Optional::Some.new(1),
+  z <= Optional::None(Bool).new(),
+  b_s = b.to_s,
+  Optional::Some.new(a_s + ":" + b_s)
+}).map {|x| x + "asdf"}
+result = match_optional o, {
+  [Some, x] => "Some(#{x})",
+  _ => "Nothing"
+}
+puts result
