@@ -144,10 +144,10 @@ macro ap(call)
 end
 
 macro adt(base, args)
-  {% if base[0].class_name == "Path" %}
-    {% base_class = base[0].names[0] %}
+  {% if base.class_name == "Path" %}
+    {% base_class = base.names[0] %}
   {% else %}
-    {% base_class = base[0].name.names[0] %}
+    {% base_class = base.name.names[0] %}
   {% end %}
   # base class {{args[0]}}
   macro match_{{base_class.underscore}}(val, cases)
@@ -184,17 +184,17 @@ macro adt(base, args)
       %matcher_func.call()
     }.call
   end
-  abstract class {{base[0]}}
-    {% if base[0].class_name == "Path" %}
+  abstract class {{base}}
+    {% if base.class_name == "Path" %}
       # non generic base
       {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %}
-          class {{args[i].names[0]}} < {{base[0]}}
+          class {{args[i].names[0]}} < {{base}}
             def initialize
             end
           end
         {% else %}
-          class {{args[i].name}} < {{base[0]}}
+          class {{args[i].name}} < {{base}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
             {% end %}
@@ -213,21 +213,21 @@ macro adt(base, args)
       {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %} # constructor with no value types
           class {{args[i].names[0]}}(
-              {{base[0].type_vars[0]}}
-              {% for j in 1...base[0].type_vars.size %}
-                , {{base[0].type_vars[j]}}
+              {{base.type_vars[0]}}
+              {% for j in 1...base.type_vars.size %}
+                , {{base.type_vars[j]}}
               {% end %}
-            ) < {{base[0]}}
+            ) < {{base}}
             def initialize
             end
           end
         {% else %} # intersection type
           class {{args[i].name}}(
-              {{base[0].type_vars[0]}}
-              {% for j in 1...base[0].type_vars.size %}
-                , {{base[0].type_vars[j]}}
+              {{base.type_vars[0]}}
+              {% for j in 1...base.type_vars.size %}
+                , {{base.type_vars[j]}}
               {% end %}
-            ) < {{base[0]}}
+            ) < {{base}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
             {% end %}
@@ -250,14 +250,28 @@ end
 #   {% if matcher %}
 # end
 
-adt [IntList], {
+adt IntList, {
   Empty,
   Cons(Int32, IntList)
 }
 
-adt [List(A)], {
+adt List(A), {
   Empty,
   Cons(A, List(A))
+}
+empty = List::Empty(Int32).new
+puts (empty)
+puts (List::Cons(Int32).new(1, empty))
+
+adt Result(A, E), {
+  Ok(A),
+  Err(E)
+}
+
+
+puts match_result Result::Err(Int32, String).new("Error occured"), {
+  [Ok, x] => "Ok(#{x})",
+  [Err, err] => "Err(#{err})"
 }
 
 
@@ -328,11 +342,11 @@ puts match_list (List::Cons.new(true, List::Empty(Bool).new)), {
 # print (a = 23)
 
 
-macro adt_module(base, args, cls_dec)
-  {% if base[0].class_name == "Path" %}
-    {% base_class = base[0].names[0] %}
+macro adt_module(base_type, args, cls_dec)
+  {% if base_type.class_name == "Path" %}
+    {% base_class = base_type.names[0] %}
   {% else %}
-    {% base_class = base[0].name.names[0] %}
+    {% base_class = base_type.name.names[0] %}
   {% end %}
   macro match_{{base_class.underscore}}(val, cases)
     %value = \{{val}}  
@@ -372,19 +386,19 @@ macro adt_module(base, args, cls_dec)
 
   {{cls_dec.id}}
 
-  module {{base[0]}}
-    {% if base[0].class_name == "Path" %}
+  module {{base_type}}
+    {% if base_type.class_name == "Path" %}
       # non generic base
       {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %}
           class {{args[i].names[0]}}
-              include {{base[0]}}
+              include {{base_type}}
             def initialize
             end
           end
         {% else %}
           class {{args[i].name}}
-              include {{base[0]}}
+              include {{base_type}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
             {% end %}
@@ -403,23 +417,23 @@ macro adt_module(base, args, cls_dec)
       {% for i in 0...args.size %}
         {% if args[i].class_name == "Path" %} # constructor with no value types
           class {{args[i].names[0]}}(
-              {{base[0].type_vars[0]}}
-              {% for j in 1...base[0].type_vars.size %}
-                , {{base[0].type_vars[j]}}
+              {{base_type.type_vars[0]}}
+              {% for j in 1...base_type.type_vars.size %}
+                , {{base_type.type_vars[j]}}
               {% end %}
             )
-            include {{base[0]}}
+            include {{base_type}}
             def initialize
             end
           end
         {% else %} # intersection type
           class {{args[i].name}}(
-              {{base[0].type_vars[0]}}
-              {% for j in 1...base[0].type_vars.size %}
-                , {{base[0].type_vars[j]}}
+              {{base_type.type_vars[0]}}
+              {% for j in 1...base_type.type_vars.size %}
+                , {{base_type.type_vars[j]}}
               {% end %}
             )
-            include {{base[0]}}
+            include {{base_type}}
             {% for j in 0...args[i].type_vars.size %}
               property value{{j}}
             {% end %}
@@ -437,14 +451,14 @@ macro adt_module(base, args, cls_dec)
   end
 end
 
-adt_module [Optional(A)], {
+adt_module Optional(A), {
   Some(A), None
 },
 module Optional(A)
   def to_s
     match_optional(self, {
       [Some, x] => "Some(#{x})",
-      [None] => "None"
+      [None]    => "None"
     })
   end
 end
