@@ -1,9 +1,8 @@
 include CRZ
 
 module CRZ::Containers
-  adt_class Option(A), {
+  adt_class Option(A),
     Some(A), None,
-  },
     abstract class ADTOption(A)
       include Monad(A)
 

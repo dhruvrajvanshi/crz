@@ -21,10 +21,10 @@ include CRZ
 Define basic algebraic type using adt
 ```
 ## A list type for integers
-adt IntList, {
+adt IntList, # name of tye new type
   Empty,
   Cons(Int32, IntList),
-}
+
 ```
 
 This declares a type Int list, which can either be an empty list
@@ -103,10 +103,10 @@ You have to add .call at the end of the proc otherwise, it will be returned as a
 You can also declare a generic ADTs.
 Here's a version of IntList which can be instantiated for any type.
 ```crystal
-adt List(A), {
+adt List(A),
   Empty,
   Cons(A, List(A))
-}
+
 empty = List::Empty(Int32).new # Type annotation is required for empty
 cons  = List::Cons.new 1, empty # type annotation isn't required because it is inferred from the first argument
 head = List.match cons, List(Int32), { # Just List won't work here, it has to be concrete type List(Int32)

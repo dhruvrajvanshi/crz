@@ -2,10 +2,9 @@ require "./src/crz"
 include CRZ
 
 # # Basic algebraic data type
-adt IntList, {
+adt IntList,
   Empty,
-  Cons(Int32, IntList),
-}
+  Cons(Int32, IntList)
 
 empty = IntList::Empty.new
 listWithJust1 = IntList::Cons.new 1, empty
@@ -25,10 +24,10 @@ head = IntList.match listWithJust1, IntList, {
 pp head
 
 
-adt List(A), {
+adt List(A),
 	Empty,
 	Cons(A, List(A))
-}
+
 empty = List::Empty(Int32).new
 cons  = List::Cons.new 1, empty
 head = List.match cons, List(Int32), { # Just List won't work here, it has to be concrete type List(Int32)

@@ -1,5 +1,5 @@
 module CRZ
-  macro adt(base_type, args)
+  macro adt(base_type, *args)
     {% if base_type.class_name == "Path" %}
       {% base_class = base_type.names[0] %}
     {% else %}
@@ -126,7 +126,8 @@ module CRZ
     end
   end
 
-  macro adt_class(base_type, args, cls_dec)
+  macro adt_class(base_type, *args)
+    {% cls_dec = args[args.size - 1] %}
     {% if base_type.class_name == "Path" %}
       {% base_class = base_type.names[0] %}
     {% else %}
@@ -163,7 +164,7 @@ module CRZ
         {% end %}
       {% else %}
         # generic base
-        {% for i in 0...args.size %}
+        {% for i in 0...args.size - 1 %}
           {% if args[i].class_name == "Path" %} # constructor with no value types
             class {{args[i].names[0]}}(
                 {{base_type.type_vars[0]}}

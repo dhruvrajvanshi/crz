@@ -2,10 +2,9 @@ require "spec"
 require "./spec_helper"
 # include CRZ
 
-adt IntList, {
+adt IntList,
   Empty,
-  Cons(Int32, IntList),
-}
+  Cons(Int32, IntList)
 
 describe CRZ do
   it "creates constructors for non generic adt" do
