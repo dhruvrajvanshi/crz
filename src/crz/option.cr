@@ -8,7 +8,7 @@ module CRZ::Containers
       include Monad(A)
 
       def to_s
-        Option.match self, {
+        Option.match self, Option(A), {
           [Some, x] => "Some(#{x})",
           [None]    => "None",
         }
@@ -37,13 +37,6 @@ module CRZ::Containers
           [Some, x] => (block.call x),
           [None]    => Option::None(B).new,
         }
-        # if (self.is_a? Option::Some(A))
-        #   yield self.value0
-        # elsif (self.is_a? Option::None(A))
-        #   Option::None(B).new
-        # else
-        #   raise Exception.new("Option#bind called for unknown subtype of Option #{typeof(self)}")
-        # end
       end
     end
 end
