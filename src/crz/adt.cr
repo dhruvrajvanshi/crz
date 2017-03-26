@@ -73,6 +73,7 @@ module CRZ
         -> {
           %value = \{{val}}
           %matcher_func = -> {
+            \{% literal_classes = ["NumberLiteral", "StringLiteral", "BoolLiteral", "NilLiteral", "CharLiteral", "SymbolLiteral"] %}
             \{% for pattern, i in cases.keys %}
               \{% if pattern.class_name == "ArrayLiteral" %}
                 if
@@ -88,12 +89,21 @@ module CRZ
                       {% end %}
                         # bind pattern vars
                         \{% num_ifs = 0 %}
-                        \{% for i in 1...pattern.size %}
-                          \{% if pattern[i].class_name == "Var" %}
-                            \{{pattern[i]}} = %value.value\{{i - 1}}
+                        \{% for j in 1...pattern.size %}
+                          \{% if pattern[j].class_name == "Var" %}
+                            \{{pattern[j]}} = %value.value\{{j - 1}}
+                          \{% end %}
+                        \{% end %}
+                        \{% literals = pattern.select {|p| literal_classes.includes? p.class_name } %}
+                        \{% for literal, j in pattern %}
+                          \{% if literal_classes.includes? literal.class_name %}
+                            if(%value.value\{{j-1}} == \{{literal}})
                           \{% end %}
                         \{% end %}
                         return \{{cases[pattern]}}
+                        \{% for literal in literals%}
+                          end
+                        \{% end %}
                   \{% end %}
                 end # end of pattern branch
               \{% else %}

@@ -34,5 +34,16 @@ describe CRZ do
       [Cons, x, xs] => 2,
       [_]           => 1,
     }).should eq 2
+
+    IntList.match(cons, IntList, {
+      [Cons, 0, xs] => 2,
+      [_]           => 1,
+    }).should eq 1
+
+    IntList.match(cons, IntList, {
+      [Cons, 0, xs] => 1,
+      [Cons, 1, xs] => 2,
+      [_]           => 3,
+    }).should eq 2
   end
 end
