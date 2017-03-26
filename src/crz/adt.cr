@@ -1,26 +1,26 @@
 module CRZ
-  macro adt(base, args)
-    {% if base.class_name == "Path" %}
-      {% base_class = base.names[0] %}
+  macro adt(base_type, args)
+    {% if base_type.class_name == "Path" %}
+      {% base_class = base_type.names[0] %}
     {% else %}
-      {% base_class = base.name.names[0] %}
+      {% base_class = base_type.name.names[0] %}
     {% end %}
 
     # base class
-    abstract class {{base}}
+    abstract class {{base_type}}
 
-      {% if base.class_name == "Path" %}
+      {% if base_type.class_name == "Path" %}
         # non generic base
         {% for i in 0...args.size %}
           {% if args[i].class_name == "Path" %}
             # subclass with no members
-            class {{args[i].names[0]}} < {{base}}
+            class {{args[i].names[0]}} < {{base_type}}
               def initialize
               end
             end
           {% else %}
             # subclass with members
-            class {{args[i].name}} < {{base}}
+            class {{args[i].name}} < {{base_type}}
               {% for j in 0...args[i].type_vars.size %}
                 property value{{j}}
               {% end %}
@@ -39,21 +39,21 @@ module CRZ
         {% for i in 0...args.size %}
           {% if args[i].class_name == "Path" %} # constructor with no value types
             class {{args[i].names[0]}}(
-                {{base.type_vars[0]}}
-                {% for j in 1...base.type_vars.size %}
-                  , {{base.type_vars[j]}}
+                {{base_type.type_vars[0]}}
+                {% for j in 1...base_type.type_vars.size %}
+                  , {{base_type.type_vars[j]}}
                 {% end %}
-              ) < {{base}}
+              ) < {{base_type}}
               def initialize
               end
             end
           {% else %} # intersection type
             class {{args[i].name}}(
-                {{base.type_vars[0]}}
-                {% for j in 1...base.type_vars.size %}
-                  , {{base.type_vars[j]}}
+                {{base_type.type_vars[0]}}
+                {% for j in 1...base_type.type_vars.size %}
+                  , {{base_type.type_vars[j]}}
                 {% end %}
-              ) < {{base}}
+              ) < {{base_type}}
               {% for j in 0...args[i].type_vars.size %}
                 property value{{j}}
               {% end %}
@@ -73,39 +73,31 @@ module CRZ
         -> {
           %value = \{{val}}
           %matcher_func = -> {
-            \{% for lhs in cases.keys %}
-              \{% if lhs.class_name == "Underscore" %}
-                  return \{{cases[lhs]}}
-              \{% else %}
-                \{% if lhs.class_name == "Path" %}
-                  \{%
-                    lhs_class = lhs.names[0]
-                   %}
-                \{% else %}
-                  \{% if lhs[0].class_name == "Underscore" %}
-                    \{% lhs_class = "_"
-                      %}
-                    return \{{cases[lhs]}}
+            \{% for pattern, i in cases.keys %}
+              \{% if pattern.class_name == "ArrayLiteral" %}
+                if
+                  \{% if pattern[0].class_name == "Underscore"%}
+                    (true) # wildcard pattern; always match
+                    return \{{cases[pattern]}}
                   \{% else %}
-                    \{%
-                       lhs_class = lhs[0].names[0]
-                     %}
+                    \{% variant = pattern[0] %}
+                      {% if base_type.class_name == "Generic" %}
+                        %value.is_a?({{base_class}}::\{{pattern[0]}}(\{{base.type_vars.splat}}))
+                      {% else %}
+                        %value.is_a?({{base_class}}::\{{pattern[0]}})
+                      {% end %}
+                        # bind pattern vars
+                        \{% num_ifs = 0 %}
+                        \{% for i in 1...pattern.size %}
+                          \{% if pattern[i].class_name == "Var" %}
+                            \{{pattern[i]}} = %value.value\{{i - 1}}
+                          \{% end %}
+                        \{% end %}
+                        return \{{cases[pattern]}}
                   \{% end %}
-                \{% end %}
-
-                if %value.is_a? {{base_class}}::\{{lhs_class}}
-                  ## bind values
-                  \{% if lhs.class_name != "Path" %}
-                    \{% for i in 1...lhs.size %}
-                      \{% if base.class_name == "Generic" %}
-                        \{{lhs[i]}} = %value.as({{base_class}}::\{{lhs_class}}(\{{base.type_vars.splat}})).value\{{i-1}}
-                      \{% else %}
-                        \{{lhs[i]}} = %value.as({{base_class}}::\{{lhs_class}}).value\{{i-1}}
-                      \{% end %}
-                    \{% end %}
-                  \{% end %}
-                  return \{{cases[lhs]}}
-                end
+                end # end of pattern branch
+              \{% else %}
+                \{% pattern.raise "Pattern should be an Array." %}
               \{% end %}
             \{% end %}
             raise ArgumentError.new("Non exhaustive patterns passed to" + {{base_class.underscore.stringify}} + ".match")

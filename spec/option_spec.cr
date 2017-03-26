@@ -38,13 +38,13 @@ describe Option do
     end
     Option.match mapped, Option(Int32), {
       [Some, x] => (x.should eq 35),
-      _         => (1.should eq 2),
+      [_]       => (1.should eq 2),
     }
 
     string_option = mapped.map &.to_s
     Option.match string_option, Option(String), {
       [Some, x] => (x.should eq "35"),
-      _         => (1.should eq 2),
+      [_]       => (1.should eq 2),
     }
 
     none = Option::None(Int32).new

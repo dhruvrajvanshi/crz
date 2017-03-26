@@ -1,2 +1,1 @@
 require "../src/crz"
-require "./*"
