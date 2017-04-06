@@ -16,7 +16,7 @@ module CRZ
       ap(func)
     end
 
-    def self.pure(value : A) : Applicative(A)
+    def self.pure(value : A) : Applicative(A) forall A
       raise "pure method unimplemented"
     end
   end
@@ -49,7 +49,7 @@ module CRZ
     end
 
     def <<(other : Monad(B)) : Monad(A) forall B
-      bind { |_| self }
+      other.bind { |_| self }
     end
   end
 end
