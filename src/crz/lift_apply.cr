@@ -1,4 +1,4 @@
-module CRZ
+module CRZ::Monad::Macros
   macro lift_apply(f, *args)
     {% for i in 0...args.size %}
       {{args[i]}}.bind { |arg{{i}}|
