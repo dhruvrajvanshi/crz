@@ -119,9 +119,9 @@ head = List.match cons, List(Int32), { # Just List won't work here, it has to be
 You may need to add methods to your ADTs. This can be done using `adt_class` macro which is similar to `adt` but has a class declaration as it's last argument.
 For example, here's a partial implementation of `CRZ::Containers::Option` with a few members excluded for brevity.
 ```crystal
-adt_class Option(A), {
-    Some(A), None,
-  },
+adt_class Option(A),
+    Some(A),
+    None,
     abstract class ADTOption(A)
       include Monad(A)
 
