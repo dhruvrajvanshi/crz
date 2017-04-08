@@ -1,6 +1,8 @@
 include CRZ
 
 module CRZ::Containers
+  alias Some = Option::Some
+  alias None = Option::None
   adt_class Option(A),
     Some(A), None,
     abstract class ADTOption(A)

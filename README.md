@@ -157,6 +157,11 @@ One of them is `CRZ::Option` which can either contain a value or nothing.
 a = Option::Some.new 1
 none = Option::None(Int32).new
 
+# you can omit base class name due to type aliases
+# defined in CRZ namespace
+a = Some.new 2
+b = None.new
+
 # pattern matching over Option
 Option.match a, Option(Int32), {
   [Some, x] => "Some(#{x})",
@@ -168,7 +173,7 @@ The Option type allows you to write clean code without unnecessary nil checks.
 
 You can transform Options using the .map method
 ```crystal
-option = Option::Some.new(1) # Some(1)
+option = Some.new(1) # Some(1)
           .map {|x| x+1}     # Some(2)
           .map {|x| x.to_s}  # Some("2")
           .map {|s| "asdf" + s} # Some("asdf2")
@@ -176,7 +181,7 @@ puts option.to_s # ==> Some(asdf2)
 ```
 This allows you to take functions that work on the contained type and apply them to the container. Mapping over Option::None returns an Option::None.
 ```crystal
-Option::None(Int32).new
+None(Int32).new
   .map {|x| x.to_s} # Option::None(String)
 ```
 Notice that mapping changes the type of the Option from Option(Int32) to Option(String).
@@ -185,12 +190,12 @@ The .bind method is a bit more powerful than the map method. It allows you to se
 Instead of a block of type `A -> B` like map, the bind method takes a block from `A -> Option(B)` and returns Option(B).
 For example
 ```crystal
-Option.Some.new(1)
+Some.new(1)
   .bind do |x|
     if x == 0
-      Option::None(Int32).new
+      None(Int32).new
     else
-      Option::Some.new(x)
+      Some.new(x)
     end
   end
 ```
@@ -204,9 +209,9 @@ using normal functions and expressions.
 You can do that using mdo macro inspired by Haskell's do notation.
 ```crystal
 c = mdo({
-  x <= Option::Some.new(1),
-  y <= Option::Some.new(2),
-  Option::Some.new(x + y)
+  x <= Some.new(1),
+  y <= Some.new(2),
+  Some.new(x + y)
 })
 puts c # ==> Some(3)
 ```
@@ -223,10 +228,10 @@ c = mdo({
   y <= another_option,
   a = x+y,
   ...
-  Option::Some.new(a)
+  Some.new(a)
 })
 ```
-If an Option::Nothing is bound anywhere in the mdo body, it short
+If an Option::None is bound anywhere in the mdo body, it short
 circuits the entire block and returns a Nothing. The contained type of the nothing will still be
 the contained type of the last expression in the block.
 ```crystal
@@ -237,7 +242,7 @@ c = mdo({
   ...
   ...
 })
-puts c.to_s # ==> Nothing
+puts c.to_s # ==> None
 ```
 
 Think of what you'd have to do to achieve this result without using mdo or bind.
@@ -247,17 +252,17 @@ Instead of this,
 c = mdo({
   x <= a,
   y <= b,
-  Option::Some.new(x + y)
+  Some.new(x + y)
 })
 ```
 You'd have to write this
 ```crystal
 Option.match a, Option(Int32), {
   [Some, x] => Option.match b, Option(Int32), {
-    [Some, y] => Option::Some.new(x+y),
-    [Nothing] => Option::Nothing(Int32).new
+    [Some, y] => Some.new(x+y),
+    [None] => None(Int32).new
   },
-  [Nothing] => Option::Nothing(Int32).new
+  [None] => None(Int32).new
 }
 ```
 This is harder to read and doesn't scale well to more variables. If you have 10
@@ -266,7 +271,7 @@ If you used regular nillable values that the language provides, then it would
 turn into nested nil checks which is the same thing.
 
 Always have a monadic value as the last expression of the mdo block. If you don't,
-the return type of mdo block will be (A | Nothing(A)).
+the return type of mdo block will be (A | None(A)).
 
 Remember when I said .bind method is really powerful? An mdo block is transformed
 into nested binds during macro expansion.
@@ -283,7 +288,7 @@ end
 and you want to apply this function to two monads instead of two values.
 You can use an mdo block but an even cleaner way is to write
 ```
-lift_apply sum, Option::Some.new(1), Option::Some.new(2)
+lift_apply sum, Some.new(1), Some.new(2)
 ```
 You can also use a proc
 ```

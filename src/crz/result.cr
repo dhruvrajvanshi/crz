@@ -1,4 +1,6 @@
 module CRZ::Containers
+  alias Ok = Result::Ok
+  alias Err = Result::Err
   adt_class Result(T, E),
     Ok(T),
     Err(E),

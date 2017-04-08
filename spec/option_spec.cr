@@ -3,7 +3,7 @@ describe Option do
   it "creates Option::Some from constructor" do
     o = Option::Some.new 42
     o.value0.should eq 42
-    typeof(o).should eq Option::Some(Int32)
+    typeof(o).should eq Some(Int32)
     (o.responds_to? :map).should eq true
     (o.responds_to? :bind).should eq true
     (o.responds_to? :ap).should eq true
@@ -15,7 +15,7 @@ describe Option do
 
   it "creates Option::None from constructor" do
     o = Option::None(Int32).new
-    typeof(o).should eq Option::None(Int32)
+    typeof(o).should eq None(Int32)
     (o.responds_to? :map).should eq true
     (o.responds_to? :bind).should eq true
     (o.responds_to? :ap).should eq true
@@ -27,11 +27,11 @@ describe Option do
 
   it "implements pure method" do
     o = Option.pure(2)
-    typeof(o).should eq Option::Some(Int32)
+    typeof(o).should eq Some(Int32)
   end
 
   it "works as a functor" do
-    some = Option::Some.new 34
+    some = Some.new 34
     mapped = some.map do |x|
       x.should eq 34
       x + 1
