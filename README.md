@@ -23,7 +23,7 @@ Define basic algebraic type using adt
 ## A list type for integers
 adt IntList, # name of tye new type
   Empty,
-  Cons(Int32, IntList),
+  Cons(Int32, IntList)
 
 ```
 
@@ -135,7 +135,7 @@ adt_class Option(A),
       def bind(&block : A -> Option(B)) : Option(B) forall B
         Option.match self, Option(A), {
           [Some, x] => (block.call x),
-          [None]    => Option::None(B).new,
+          [None]    => None(B).new,
         }
       end
       ...
@@ -143,8 +143,8 @@ adt_class Option(A),
 ```
 Now all Option values have bind and to_s methods defined on them.
 ```crystal
-puts Option::Some.new(1).to_s # => Some(1)
-puts Option::None(Int32).new.to_s # => None
+puts Some.new(1).to_s # => Some(1)
+puts None(Int32).new.to_s # => None
 ```
 Notice that the class has to be abstract and the class name has to be
 ADT followed by the name of the type you're declaring otherwise, it won't work.
@@ -182,7 +182,7 @@ puts option.to_s # ==> Some(asdf2)
 This allows you to take functions that work on the contained type and apply them to the container. Mapping over Option::None returns an Option::None.
 ```crystal
 None(Int32).new
-  .map {|x| x.to_s} # Option::None(String)
+  .map {|x| x.to_s} # None(String)
 ```
 Notice that mapping changes the type of the Option from Option(Int32) to Option(String).
 
