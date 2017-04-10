@@ -308,8 +308,9 @@ over them at the end. You already know how to use regular functions over monadic
 ### Other operators on monads
 All monads implement these methods
 * .of
-* >>
-* <<
+* ```>>```
+* ```<<```
+
 To create a monad from a single value, use the .of method
 ```crystal
 Option.of(2) # => Some(2)
