@@ -121,6 +121,28 @@ describe Option do
       Option.of(x + y + z),
     }).unwrap.should eq 13
   end
+
+  it "implements >> operator" do
+    o = Option.of(1) >> Option.of(2)
+    o.unwrap.should eq 2
+
+    o = Option.of(1) >> None(Int32).new
+    o.class.should eq None(Int32)
+
+    o = None(Int32).new >> Option.of(1)
+    o.class.should eq None(Int32)
+  end
+
+  it "implements << operator" do
+    o = Option.of(1) << Option.of(2)
+    o.unwrap.should eq 1
+
+    o = Option.of(1) << None(Int32).new
+    o.class.should eq None(Int32)
+
+    o = None(Int32).new << Option.of(1)
+    o.class.should eq None(Int32)
+  end
 end
 
 def sum(*args)

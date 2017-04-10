@@ -1,4 +1,4 @@
-module CRZ
+module CRZ::Prelude
   def id(a : A) forall A
     a
   end
