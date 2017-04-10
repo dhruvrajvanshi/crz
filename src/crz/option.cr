@@ -15,7 +15,7 @@ module CRZ::Containers
         }
       end
 
-      def self.pure(value : T) : Option(T) forall T
+      def self.of(value : T) : Option(T) forall T
         Option::Some.new(value)
       end
 

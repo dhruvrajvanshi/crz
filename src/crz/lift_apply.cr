@@ -4,7 +4,7 @@ module CRZ::Monad::Macros
       {{args[i]}}.bind { |arg{{i}}|
     {% end %}
 
-    typeof({{args[0]}}).pure(
+    typeof({{args[0]}}).of(
       {{f.id}}(
         {% for i in 0...args.size - 1 %}
           arg{{i}},

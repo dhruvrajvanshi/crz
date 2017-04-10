@@ -3,15 +3,21 @@ CRZ is a functional programming library for the crystal languages.
 
 ## Features
 * Common monads
-  - Option (implemented)
-  - Nilable (implemented)
+  - Option
+  - Nilable
   - Result
-  - Future
 * Algebraic data types (using macros).
 * Haskell like do notation (more macro goodness).
 * Macros for Applicative types.
 * Pattern matching (May or may not implement nested patterns and
 compile time exhaustiveness checking in the future).
+
+## Goals
+* Make working with monads/applicatives/functors as pleasant as possible (using macros if needed).
+* Enable type safe error handling in the language (using Result(A, E) type).
+* Emulate algebraic data types using macros.
+* Make working with algebraic types type safe and easy using pattern matching.
+
 
 ## Quickstart
 ```crystal
@@ -160,7 +166,7 @@ none = Option::None(Int32).new
 # you can omit base class name due to type aliases
 # defined in CRZ namespace
 a = Some.new 2
-b = None.new
+b = None(Int32).new
 
 # pattern matching over Option
 Option.match a, Option(Int32), {
@@ -201,7 +207,7 @@ Some.new(1)
 ```
 The bind is more powerful than you might think. It allows you to combine arbitrary Monads into a single Monad.
 
-### mdo macro
+### Sequencing with mdo macro
 What if you have multiple Option types and you want to apply some
 computation to their contents without having to manually unwrap their
 contents using pattern matching?. There's a way to operate over monads
@@ -299,14 +305,82 @@ Just like mdo, this is also converted into nested .bind calls during macro expan
 It is advisable to keep your values inside monads for as long as possible and match
 over them at the end. You already know how to use regular functions over monadic values.
 
-## Goals
-* Make working with monads/applicatives/functors as pleasant as possible (using macros if needed).
-* Enable type safe error handling in the language (using Result(A, E) type).
-* Emulate algebraic data types using macros.
-* Make working with algebraic types type safe and easy using pattern matching.
+### Other operators on monads
+All monads implement these methods
+* .of
+* >>
+* <<
+To create a monad from a single value, use the .of method
+```crystal
+Option.of(2) # => Some(2)
+Result(Int32, String).of(2) # => Ok(2)
+```
 
-## Roadmap
-* Write tests.
-* Write documentation.
-* Implement Result and Future types.
-* Improve compile time error messages for macros.
+To sequence two monads, discarding the value of the first monad, use the operator ```>>```
+```crystal
+Option.of(2) >> Option.of(3) # => Some(3)
+None(Int32).new >> Option.of(3) # => None
+Option.of(2) >> None(Int32).new # => None
+```
+
+To sequence two monads, discarding the value of the second
+monad, use the ```<<``` operator.
+```crystal
+Option.of(2) << Option.of(3) # => Some(2)
+```
+
+### Implementing your own monads
+To implement your own monadic types, you have to include the Monad(T) module in your class, and you have to implement
+the .of, bind and map methods (you can omit the map method if
+your monad takes only one generic type argument). of method
+is a static method, so, it is named self.of.
+For example, Option type is defined as
+```crystal
+adt_class Option(A),
+    Some(A), None,
+    abstract class ADTOption(A)
+      include Monad(A)
+
+      def self.of(value : T) : Option(T) forall T
+        Option::Some.new(value)
+      end
+
+      def bind(&block : A -> Option(B)) : Option(B) forall B
+        Option.match self, Option(A), {
+          [Some, x] => (block.call x),
+          [None]    => Option::None(B).new,
+        }
+      end
+    end
+```
+In case your type requires more than 1 generic argument, you
+can implement the map method in a straightforward way using
+the bind and of methods.
+```crystal
+class YourType(A1, A2)
+  include Monad(A1)
+
+  ...
+
+  def map(&block : A1 -> B) : YourType(B, A2) forall B
+    bind do |x|
+      YourType(B, A2).of(block.call x)
+    end
+  end
+end
+
+# or, in case your monad is based on the second generic arg,
+class YourType(A1, A2)
+  include Monad(A2)
+
+  ...
+
+  def map(&block : A2 -> B) : YourType(A1, B) forall B
+    bind do |x|
+      YourType(A1, B).of(block.call x)
+    end
+  end
+end
+```
+Any monads you define will be compatible with mdo and
+lift_apply macros.

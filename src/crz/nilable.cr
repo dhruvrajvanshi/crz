@@ -9,7 +9,7 @@ module CRZ::Containers
     def initialize(@value : A? = nil)
     end
 
-    def self.pure(value : A) forall A
+    def self.of(value : A) forall A
       Nilable.new value
     end
 

@@ -7,7 +7,7 @@ module CRZ::Containers
     abstract class ADTResult(T, E)
       include Monad(T)
       
-      def self.pure(value : T) : Result(T, E)
+      def self.of(value : T) : Result(T, E)
         Result::Ok(T, E).new value
       end
 

@@ -16,8 +16,8 @@ module CRZ
       ap(func)
     end
 
-    def self.pure(value : A) : Applicative(A) forall A
-      raise "pure method unimplemented"
+    def self.of(value : A) : Applicative(A) forall A
+      raise "of method unimplemented"
     end
   end
 
@@ -34,7 +34,7 @@ module CRZ
 
     def map(&block : A -> B) : Monad(B) forall B
       bind do |x|
-        typeof(self).pure(block.call x)
+        typeof(self).of(block.call x)
       end
     end
 
@@ -49,7 +49,11 @@ module CRZ
     end
 
     def <<(other : Monad(B)) : Monad(A) forall B
-      other.bind { |_| self }
+      bind { |v|
+        other.map {|_|
+          v
+        }
+      }
     end
   end
 end

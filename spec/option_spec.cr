@@ -25,8 +25,8 @@ describe Option do
     (o.responds_to? :*).should eq true
   end
 
-  it "implements pure method" do
-    o = Option.pure(2)
+  it "implements of method" do
+    o = Option.of(2)
     typeof(o).should eq Some(Int32)
   end
 
@@ -60,10 +60,10 @@ describe Option do
   end
 
   it "works as an applicative" do
-    someF = Option.pure ->(x : Int32) {
+    someF = Option.of ->(x : Int32) {
       x + 1
     }
-    some12 = Option.pure(12)
+    some12 = Option.of(12)
     some12.unwrap.should eq 12
 
     none = Option::None(Int32).new
@@ -77,48 +77,48 @@ describe Option do
       x + y
     }
 
-    (lift_apply f.call, some12, Option.pure(2)).unwrap.should eq 14
-    (lift_apply sum, some12, Option.pure(2)).unwrap.should eq 14
+    (lift_apply f.call, some12, Option.of(2)).unwrap.should eq 14
+    (lift_apply sum, some12, Option.of(2)).unwrap.should eq 14
 
-    (lift_apply sum, Option.pure(1), Option.pure(2), Option.pure(3)).unwrap.should eq 6
+    (lift_apply sum, Option.of(1), Option.of(2), Option.of(3)).unwrap.should eq 6
 
-    (lift_apply sum, Option.pure(1), Option::None(Int32).new, Option.pure(2)).has_value.should eq false
+    (lift_apply sum, Option.of(1), Option::None(Int32).new, Option.of(2)).has_value.should eq false
   end
 
   it "works as a monad" do
-    (Option.pure(1).bind { |x| Option.pure(x + 1) }).unwrap.should eq 2
-    (Option::None(Int32).new.bind { |x| Option.pure(x + 1) }).has_value.should eq false
-    (Option.pure(1).bind { |x| Option::None(Int32).new }).has_value.should eq false
+    (Option.of(1).bind { |x| Option.of(x + 1) }).unwrap.should eq 2
+    (Option::None(Int32).new.bind { |x| Option.of(x + 1) }).has_value.should eq false
+    (Option.of(1).bind { |x| Option::None(Int32).new }).has_value.should eq false
 
     mdo({
-      x <= Option.pure(1),
-      y <= Option.pure(2),
-      Option.pure(x + y),
+      x <= Option.of(1),
+      y <= Option.of(2),
+      Option.of(x + y),
     }).unwrap.should eq 3
 
     mdo({
-      x <= Option.pure(1),
+      x <= Option.of(1),
       a = x + 1,
-      y <= Option.pure(2),
-      Option.pure(a + y),
+      y <= Option.of(2),
+      Option.of(a + y),
     }).unwrap.should eq 4
     mdo({
-      x <= Option.pure(1),
+      x <= Option.of(1),
       y <= Option::None(Int32).new,
-      z <= Option.pure(2),
-      Option.pure(x + y + z),
+      z <= Option.of(2),
+      Option.of(x + y + z),
     }).has_value.should eq false
 
     mdo({
-      x <= Option.pure(1),
+      x <= Option.of(1),
       y <= mdo({
-        a <= Option.pure(3),
-        b <= Option.pure(3),
+        a <= Option.of(3),
+        b <= Option.of(3),
         c = 4,
-        Option.pure(a + b + c),
+        Option.of(a + b + c),
       }),
-      z <= Option.pure(2),
-      Option.pure(x + y + z),
+      z <= Option.of(2),
+      Option.of(x + y + z),
     }).unwrap.should eq 13
   end
 end

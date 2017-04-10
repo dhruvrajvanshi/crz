@@ -1,12 +1,12 @@
 require "spec"
 describe Nilable do
-  it "implements pure method" do
-    o = Nilable.pure(2)
+  it "implements of method" do
+    o = Nilable.of(2)
     typeof(o).should eq Nilable(Int32)
   end
 
   it "works as a functor" do
-    some = Nilable.pure 34
+    some = Nilable.of 34
     mapped = some.map do |x|
       x + 1
     end
@@ -26,10 +26,10 @@ describe Nilable do
   end
 
   it "works as an applicative" do
-    someF = Nilable.pure ->(x : Int32) {
+    someF = Nilable.of ->(x : Int32) {
       x + 1
     }
-    some12 = Nilable.pure(12)
+    some12 = Nilable.of(12)
     some12.value.should eq 12
 
     none = Nilable(Int32).new nil
@@ -43,48 +43,48 @@ describe Nilable do
       x + y
     }
 
-    (lift_apply f.call, some12, Nilable.pure(2)).value.should eq 14
-    (lift_apply sum, some12, Nilable.pure(2)).value.should eq 14
+    (lift_apply f.call, some12, Nilable.of(2)).value.should eq 14
+    (lift_apply sum, some12, Nilable.of(2)).value.should eq 14
 
-    (lift_apply sum, Nilable.pure(1), Nilable.pure(2), Nilable.pure(3)).value.should eq 6
+    (lift_apply sum, Nilable.of(1), Nilable.of(2), Nilable.of(3)).value.should eq 6
 
-    (lift_apply sum, Nilable.pure(1), Nilable(Int32).new, Nilable.pure(2)).value.should eq nil
+    (lift_apply sum, Nilable.of(1), Nilable(Int32).new, Nilable.of(2)).value.should eq nil
   end
 
   it "works as a monad" do
-    (Nilable.pure(1).bind { |x| Nilable.pure(x + 1) }).value.should eq 2
-    (Nilable(Int32).new.bind { |x| Nilable.pure(x + 1) }).value.should eq nil
-    (Nilable.pure(1).bind { |x| Nilable(Int32).new }).value.should eq nil
+    (Nilable.of(1).bind { |x| Nilable.of(x + 1) }).value.should eq 2
+    (Nilable(Int32).new.bind { |x| Nilable.of(x + 1) }).value.should eq nil
+    (Nilable.of(1).bind { |x| Nilable(Int32).new }).value.should eq nil
 
     mdo({
-      x <= Nilable.pure(1),
-      y <= Nilable.pure(2),
-      Nilable.pure(x + y),
+      x <= Nilable.of(1),
+      y <= Nilable.of(2),
+      Nilable.of(x + y),
     }).value.should eq 3
 
     mdo({
-      x <= Nilable.pure(1),
+      x <= Nilable.of(1),
       a = x + 1,
-      y <= Nilable.pure(2),
-      Nilable.pure(a + y),
+      y <= Nilable.of(2),
+      Nilable.of(a + y),
     }).value.should eq 4
     mdo({
-      x <= Nilable.pure(1),
+      x <= Nilable.of(1),
       y <= Nilable(Int32).new,
-      z <= Nilable.pure(2),
-      Nilable.pure(x + y + z),
+      z <= Nilable.of(2),
+      Nilable.of(x + y + z),
     }).value.should eq nil
 
     mdo({
-      x <= Nilable.pure(1),
+      x <= Nilable.of(1),
       y <= mdo({
-        a <= Nilable.pure(3),
-        b <= Nilable.pure(3),
+        a <= Nilable.of(3),
+        b <= Nilable.of(3),
         c = 4,
-        Nilable.pure(a + b + c),
+        Nilable.of(a + b + c),
       }),
-      z <= Nilable.pure(2),
-      Nilable.pure(x + y + z),
+      z <= Nilable.of(2),
+      Nilable.of(x + y + z),
     }).value.should eq 13
   end
 end

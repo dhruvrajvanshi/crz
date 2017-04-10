@@ -25,8 +25,8 @@ describe Result do
     (o.responds_to? :*).should eq true
   end
 
-  it "implements pure method" do
-    o = Result(Int32, String).pure 2
+  it "implements of method" do
+    o = Result(Int32, String).of 2
     typeof(o).should eq Result::Ok(Int32, String)
   end
 
@@ -92,7 +92,7 @@ describe Result do
   it "works as a monad" do
     ok1 = Result::Ok(Int32, String).new(1)
     (ok1.bind { |x| Result::Ok(Int32, String).new(x + 1) }).unwrap.should eq 2
-    (Result::Err(Int32, String).new("Err").bind { |x| Result(Int32, String).pure(x + 1) }).has_value.should eq false
+    (Result::Err(Int32, String).new("Err").bind { |x| Result(Int32, String).of(x + 1) }).has_value.should eq false
     (ok1.bind { |x| Result::Err(Int32, String).new "Err" }).has_value.should eq false
 
     ok2 = Result::Ok(Int32, String).new(2)
@@ -103,10 +103,10 @@ describe Result do
         a <= ok3,
         b <= ok3,
         c = 4,
-        Result(Int32, String).pure(a + b + c),
+        Result(Int32, String).of(a + b + c),
       }),
       z <= ok2,
-      Result(Int32, String).pure(x + y + z),
+      Result(Int32, String).of(x + y + z),
     }).unwrap.should eq 13
   end
 end
