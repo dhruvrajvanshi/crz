@@ -1,5 +1,5 @@
 # CRZ [![Build Status](https://travis-ci.org/dhruvrajvanshi/crz.svg?branch=master)](https://travis-ci.org/dhruvrajvanshi/crz)
-CRZ is a functional programming library for the crystal languages.
+CRZ is a functional programming library for the Crystal language.
 
 ## Features
 * Common monads
