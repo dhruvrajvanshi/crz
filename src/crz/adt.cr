@@ -69,56 +69,59 @@ module CRZ
         {% end %}
       {% end %}
 
-      macro match(val, base, cases)
+      macro match(val, cases)
+        \{% if cases.class_name != "HashLiteral" %}
+          \{{cases.raise "SyntaxError: " + "Second argument to match " +
+            "should be a HashLiteral containing patterns"
+          }}
+        \{% end %}
         -> {
-          %value = \{{val}}
           %matcher_func = -> {
             \{% literal_classes = ["NumberLiteral", "StringLiteral", "BoolLiteral", "NilLiteral", "CharLiteral", "SymbolLiteral"] %}
-            \{% for pattern, i in cases.keys %}
-              \{% if pattern.class_name == "ArrayLiteral" %}
-                if
-                  \{% if pattern[0].class_name == "Underscore"%}
-                    (true) # wildcard pattern; always match
-                    return \{{cases[pattern]}}
-                  \{% else %}
-                      {% if base_type.class_name == "Generic" %}
-                        %value.is_a?({{base_class}}::\{{pattern[0]}}(\{{base.type_vars.splat}}))
-                      {% else %}
-                        %value.is_a?({{base_class}}::\{{pattern[0]}})
-                      {% end %}
-                        # bind pattern vars
-                        \{% for j in 1...pattern.size %}
-                          \{% if pattern[j].class_name == "Var" %}
-                            {% if base_type.class_name == "Generic" %}
-                              \{{pattern[j]}} = %value.as({{base_class}}::\{{pattern[0]}}(\{{base.type_vars.splat}})).value\{{j - 1}}
-                            {% else %}
-                              \{{pattern[j]}} = %value.as({{base_class}}::\{{pattern[0]}}).value\{{j - 1}}
-                            {% end %}
-                          \{% elsif pattern[j].class_name == "Call" %}
-                            {% if base_type.class_name == "Generic" %}
-                              \{{pattern[j].id}} = %value.as({{base_class}}::\{{pattern[0]}}(\{{base.type_vars.splat}})).value\{{j - 1}}
-                            {% else %}
-                              \{{pattern[j].id}} = %value.as({{base_class}}::\{{pattern[0]}}).value\{{j - 1}}
-                            {% end %}
-                          \{% end %}
-                        \{% end %}
+            %value = \{{val}}                      
+            case %value
+            {% for i in 0...args.size %}
+              {% derived = args[i] %}
+              {% if derived.class_name == "Path" %}
+                {% derived_name = derived.names[0] %}
+              {% else %}
+                {% derived_name = derived.name %}
+              {% end %}
+                when {{base_class}}::{{derived_name}}
+                  \{% for pattern in cases.keys %}
+                    \{% expression = cases[pattern] %}
+                    
+                    \{% if pattern[0].class_name == "Path" %}
+                      \{% if pattern[0].names[0].stringify == {{derived_name.stringify}} %}
                         \{% literals = pattern.select {|p| literal_classes.includes? p.class_name } %}
                         \{% for literal, j in pattern %}
                           \{% if literal_classes.includes? literal.class_name %}
-                            if(%value.value\{{j-1}} == \{{literal}})
+                            if(%value.responds_to?(:value\{{j-1}}) && %value.value\{{j-1}} == \{{literal}})
                           \{% end %}
                         \{% end %}
-                        return \{{cases[pattern]}}
+                        \{% for j in 1...pattern.size %}
+                          \{% if pattern[j].class_name == "Var" %}
+                            \{{pattern[j]}} = %value.value\{{j - 1}}
+                          \{% elsif pattern[j].class_name == "Call" %}
+                            \{{pattern[j].id}} = %value.value\{{j - 1}}
+                          \{% end %}
+                        \{% end %}
+                        return \{{expression}}
                         \{% for literal in literals%}
                           end
                         \{% end %}
+                      \{% end %}
+                    \{% elsif pattern[0].class_name == "Underscore" %}
+                      return \{{expression}}
+                    \{% else %}
+                      \{{pattern[0].raise "Syntax error: " + pattern[0].class_name + " not allowed here."}}
+                    \{% end %}
                   \{% end %}
-                end # end of pattern branch
-              \{% else %}
-                \{% pattern.raise "Pattern should be an Array." %}
-              \{% end %}
-            \{% end %}
-            raise ArgumentError.new("Non exhaustive patterns passed to" + {{base_class.underscore.stringify}} + ".match")
+                  raise "Non exhaustive patterns"
+            {% end %}
+            
+            end
+            raise "Non exhaustive patterns"
           }
           %matcher_func.call()
         }.call
@@ -197,56 +200,59 @@ module CRZ
         {% end %}
       {% end %}
 
-      macro match(val, base, cases)
+      macro match(val, cases)
+        \{% if cases.class_name != "HashLiteral" %}
+          \{{cases.raise "SyntaxError: " + "Second argument to match " +
+            "should be a HashLiteral containing patterns"
+          }}
+        \{% end %}
         -> {
-          %value = \{{val}}
           %matcher_func = -> {
             \{% literal_classes = ["NumberLiteral", "StringLiteral", "BoolLiteral", "NilLiteral", "CharLiteral", "SymbolLiteral"] %}
-            \{% for pattern, i in cases.keys %}
-              \{% if pattern.class_name == "ArrayLiteral" %}
-                if
-                  \{% if pattern[0].class_name == "Underscore"%}
-                    (true) # wildcard pattern; always match
-                    return \{{cases[pattern]}}
-                  \{% else %}
-                      {% if base_type.class_name == "Generic" %}
-                        %value.is_a?({{base_class}}::\{{pattern[0]}}(\{{base.type_vars.splat}}))
-                      {% else %}
-                        %value.is_a?({{base_class}}::\{{pattern[0]}})
-                      {% end %}
-                        # bind pattern vars
-                        \{% for j in 1...pattern.size %}
-                          \{% if pattern[j].class_name == "Var" %}
-                            {% if base_type.class_name == "Generic" %}
-                              \{{pattern[j]}} = %value.as({{base_class}}::\{{pattern[0]}}(\{{base.type_vars.splat}})).value\{{j - 1}}
-                            {% else %}
-                              \{{pattern[j]}} = %value.as({{base_class}}::\{{pattern[0]}}).value\{{j - 1}}
-                            {% end %}
-                          \{% elsif pattern[j].class_name == "Call" %}
-                            {% if base_type.class_name == "Generic" %}
-                              \{{pattern[j].id}} = %value.as({{base_class}}::\{{pattern[0]}}(\{{base.type_vars.splat}})).value\{{j - 1}}
-                            {% else %}
-                              \{{pattern[j].id}} = %value.as({{base_class}}::\{{pattern[0]}}).value\{{j - 1}}
-                            {% end %}
-                          \{% end %}
-                        \{% end %}
+            %value = \{{val}}                      
+            case %value
+            {% for i in 0...args.size-1 %}
+              {% derived = args[i] %}
+              {% if derived.class_name == "Path" %}
+                {% derived_name = derived.names[0] %}
+              {% else %}
+                {% derived_name = derived.name %}
+              {% end %}
+                when {{base_class}}::{{derived_name}}
+                  \{% for pattern in cases.keys %}
+                    \{% expression = cases[pattern] %}
+                    
+                    \{% if pattern[0].class_name == "Path" %}
+                      \{% if pattern[0].names[0].stringify == {{derived_name.stringify}} %}
                         \{% literals = pattern.select {|p| literal_classes.includes? p.class_name } %}
                         \{% for literal, j in pattern %}
                           \{% if literal_classes.includes? literal.class_name %}
-                            if(%value.value\{{j-1}} == \{{literal}})
+                            if(%value.responds_to?(:value\{{j-1}}) && %value.value\{{j-1}} == \{{literal}})
                           \{% end %}
                         \{% end %}
-                        return \{{cases[pattern]}}
+                        \{% for j in 1...pattern.size %}
+                          \{% if pattern[j].class_name == "Var" %}
+                            \{{pattern[j]}} = %value.value\{{j - 1}}
+                          \{% elsif pattern[j].class_name == "Call" %}
+                            \{{pattern[j].id}} = %value.value\{{j - 1}}
+                          \{% end %}
+                        \{% end %}
+                        return \{{expression}}
                         \{% for literal in literals%}
                           end
                         \{% end %}
+                      \{% end %}
+                    \{% elsif pattern[0].class_name == "Underscore" %}
+                      return \{{expression}}
+                    \{% else %}
+                      \{{pattern[0].raise "Syntax error: " + pattern[0].class_name + " not allowed here."}}
+                    \{% end %}
                   \{% end %}
-                end # end of pattern branch
-              \{% else %}
-                \{% pattern.raise "Pattern should be an Array." %}
-              \{% end %}
-            \{% end %}
-            raise ArgumentError.new("Non exhaustive patterns passed to" + {{base_class.underscore.stringify}} + ".match")
+                  raise "Non exhaustive patterns"
+            {% end %}
+            
+            end
+            raise "Non exhaustive patterns"
           }
           %matcher_func.call()
         }.call

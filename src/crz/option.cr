@@ -9,7 +9,7 @@ module CRZ::Containers
       include Monad(A)
 
       def to_s
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => "Some(#{x})",
           [None]    => "None",
         }
@@ -20,21 +20,21 @@ module CRZ::Containers
       end
 
       def unwrap : A
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => x,
           [None]    => raise Exception.new("Tried to unwrap Option::None value"),
         }
       end
 
       def has_value : Bool
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, _] => true,
           [_]       => false,
         }
       end
 
       def bind(&block : A -> Option(B)) : Option(B) forall B
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => (block.call x),
           [None]    => Option::None(B).new,
         }

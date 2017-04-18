@@ -16,7 +16,7 @@ pp empty
 pp listWithJust1
 pp listWith0And1
 
-head = IntList.match listWithJust1, IntList, {
+head = IntList.match listWithJust1, {
 	[Cons, x, xs] => x,
 	[Empty] => nil
 }
@@ -30,7 +30,7 @@ adt List(A),
 
 empty = List::Empty(Int32).new
 cons  = List::Cons.new 1, empty
-head = List.match cons, List(Int32), { # Just List won't work here, it has to be concrete type List(Int32)
+head = List.match cons, { # Just List won't work here, it has to be concrete type List(Int32)
 	[Cons, x, _] => x,
 	[_] => nil
 }

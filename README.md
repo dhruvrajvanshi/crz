@@ -11,12 +11,9 @@ CRZ is a functional programming library for the Crystal language.
 * Macros for Applicative types.
 * Pattern matching
 
-## Goals
-* Make working with monads/applicatives/functors as pleasant as possible (using macros if needed).
-* Enable type safe error handling in the language (using Result(A, E) type).
-* Emulate algebraic data types using macros.
-* Make working with algebraic types type safe and easy using pattern matching.
-
+## Changelog
+* 0.3.0: Pattern matching now doesn't require type as the second argument.
+* 0.2.0: Added [chain](#chain) macro.
 
 ## Quickstart
 ```crystal
@@ -24,7 +21,7 @@ include CRZ
 ```
 ### Algebraic data types
 Define basic algebraic type using adt
-```
+```crystal
 ## A list type for integers
 adt IntList, # name of tye new type
   Empty,
@@ -56,7 +53,7 @@ This method is there but does not utilize the full power of CRZ ADTs.
 All user defined ADTs allow getting values from them using pattern matching. You can write cases corresponding to each variant in the data type and conditionally perform actions.
 Example
 ```crystal
-head = IntList.match listWithJust1, IntList, {
+head = IntList.match listWithJust1, {
   [Cons, x, xs] => x,
   [Empty] => nil
 }
@@ -64,19 +61,17 @@ puts head # => 1
 ```
 Notice the comma after the variant name (Cons,). This is required.
 
-Also note that the second argument to .match is the type of the value you're matching over. This is necessary because for generic ADTs, the match macro needs the concrete type of the generic arguments. Otherwise, the binding of generic values in matching can't be done.
-
 You can use [_] pattern as a catch all pattern.
 
 ```crystal
-head = IntList.match empty, IntList, {
+head = IntList.match empty, {
   [Cons, x, xs] => x,
   [_] => nil
 }
 ```
 Note that ordering of patterns matters. For example,
 ```crystal
-IntList.match list, IntList, {
+IntList.match list, {
   [_] => nil,
   [Cons, x, xs] => x,
   [Empty] => 0
@@ -87,7 +82,7 @@ This will always return nil because ```[_]``` matches everything.
 
 You can also use constants in patterns. For example
 ```crystal
-has0AsHead = IntList.match list, IntList, {
+has0AsHead = IntList.match list, {
   [Cons, 0, _] => true,
   [_] => false
 }
@@ -95,7 +90,7 @@ has0AsHead = IntList.match list, IntList, {
 
 You can write statements inside match branches ising Proc literals.
 ```crystal
-IntList.match list, IntList, {
+IntList.match list, {
   [Empty] => ->{
     print "here"
     ...
@@ -114,7 +109,7 @@ adt List(A),
 
 empty = List::Empty(Int32).new # Type annotation is required for empty
 cons  = List::Cons.new 1, empty # type annotation isn't required because it is inferred from the first argument
-head = List.match cons, List(Int32), { # Just List won't work here, it has to be concrete type List(Int32)
+head = List.match cons, {
   [Cons, x, _] => x,
   [_] => nil
 }
@@ -131,14 +126,14 @@ adt_class Option(A),
       include Monad(A)
 
       def to_s
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => "Some(#{x})",
           [None]    => "None",
         }
       end
 
       def bind(&block : A -> Option(B)) : Option(B) forall B
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => (block.call x),
           [None]    => None(B).new,
         }
@@ -168,7 +163,7 @@ a = Some.new 2
 b = None(Int32).new
 
 # pattern matching over Option
-Option.match a, Option(Int32), {
+Option.match a, {
   [Some, x] => "Some(#{x})",
   [_] => "None"
 } # ==> Some(1)
@@ -262,8 +257,8 @@ c = mdo({
 ```
 You'd have to write this
 ```crystal
-Option.match a, Option(Int32), {
-  [Some, x] => Option.match b, Option(Int32), {
+Option.match a, {
+  [Some, x] => Option.match b, {
     [Some, y] => Some.new(x+y),
     [None] => None(Int32).new
   },
@@ -346,7 +341,7 @@ adt_class Option(A),
       end
 
       def bind(&block : A -> Option(B)) : Option(B) forall B
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => (block.call x),
           [None]    => Option::None(B).new,
         }
@@ -384,3 +379,20 @@ end
 ```
 Any monads you define will be compatible with mdo and
 lift_apply macros.
+
+### Chain
+<a name="chain"></a>
+```chain``` is a pretty simple macro that allows you to pass an argument
+through multiple functions. It is similar to the pipe operator (|>) in F#
+and Elixir.
+```crystal
+def increment(x)
+  x + 1
+end
+
+def stringify(x)
+  x.to_s
+end
+chain 1, increment, stringify # => "2"
+```
+You can chain any number of functions in a chain.
