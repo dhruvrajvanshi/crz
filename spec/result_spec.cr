@@ -1,4 +1,6 @@
 require "spec"
+require "./spec_helper"
+
 describe Result do
   it "creates Result::Ok from constructor" do
     o = Result::Ok(Int32, String).new 42

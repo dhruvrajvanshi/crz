@@ -1,4 +1,6 @@
 require "spec"
+require "./spec_helper"
+
 describe Nilable do
   it "implements of method" do
     o = Nilable.of(2)

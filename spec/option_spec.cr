@@ -1,4 +1,6 @@
 require "spec"
+require "./spec_helper"
+
 describe Option do
   it "creates Option::Some from constructor" do
     o = Option::Some.new 42

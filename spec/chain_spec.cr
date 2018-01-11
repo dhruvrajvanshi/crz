@@ -1,3 +1,4 @@
+require "spec"
 require "./spec_helper"
 
 describe "chain macro" do

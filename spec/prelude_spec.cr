@@ -1,4 +1,5 @@
 require "spec"
+require "./spec_helper"
 
 describe CRZ do
   it "has correct implementation of id" do
