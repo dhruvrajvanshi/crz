@@ -145,6 +145,11 @@ describe Option do
     o = None(Int32).new << Option.of(1)
     o.class.should eq None(Int32)
   end
+
+  it "unwrap_or" do
+    Option.of(1).unwrap_or_else(0).should eq 1
+    Option::None(Int32).new.unwrap_or_else(0).should eq 0
+  end
 end
 
 def sum(*args)
