@@ -26,11 +26,30 @@ module CRZ::Containers
         }
       end
 
+      def get : A
+        unwrap
+      end
+
+      def unwrap_or_else(default : A) : A
+        Option.match self, Option(A), {
+            [Some, x] => x,
+            [None]    => default
+        }
+      end
+
+      def get_or_else(default : A) : A
+        unwrap_or_else(default)
+      end
+
       def has_value : Bool
         Option.match self, Option(A), {
           [Some, _] => true,
           [_]       => false,
         }
+      end
+
+      def flat_map(&block : A -> Option(B)) : Option(B) forall B
+        bind(block)
       end
 
       def bind(&block : A -> Option(B)) : Option(B) forall B
