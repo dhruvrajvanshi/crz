@@ -1,5 +1,5 @@
 require "spec"
-#require "./spec_helper"
+# require "./spec_helper"
 
 describe "Try" do
   it "creates Try::Success from constructor" do
@@ -47,10 +47,7 @@ describe "Try" do
     successf12 = Try::Success.of(12)
     successf12.unwrap.should eq 12
 
-
     failure = Try::Failure(Int32).new
-
-
 
     f = ->(x : Int32, y : Int32) {
       x + y
@@ -62,7 +59,6 @@ describe "Try" do
     (lift_apply sum, Try.of(1), Try.of(2), Try.of(3)).unwrap.should eq 6
 
     (lift_apply sum, Try.of(1), Try::Failure(Int32).new, Try.of(2)).has_value.should eq false
-
   end
 
   it "works as a monad2" do
