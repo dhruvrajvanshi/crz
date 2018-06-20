@@ -1,4 +1,3 @@
-
 module CRZ::Containers
   adt_class Try(A), Success(A), Failure,
 
@@ -42,15 +41,13 @@ module CRZ::Containers
         unwrap
       end
 
-        def has_value : Bool
-          self.is_a?(Try::Success) ? true : false
-        end
+      def has_value : Bool
+        self.is_a?(Try::Success) ? true : false
+      end
 
-
-        def to_s
-          self.is_a?(Try::Success) ? "Try::Success(#{value0})" : "Try::Failure"
-        end
-
+      def to_s
+        self.is_a?(Try::Success) ? "Try::Success(#{value0})" : "Try::Failure"
+      end
 
       def unwrap_or(default : A) : A
         self.is_a?(Try::Success) ? self.value0 : default
