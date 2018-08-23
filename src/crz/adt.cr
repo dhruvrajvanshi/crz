@@ -1,4 +1,5 @@
 module CRZ
+
   macro adt(base_type, *args)
     {% if base_type.class_name == "Path" %}
       {% base_class = base_type.names[0] %}
@@ -17,6 +18,15 @@ module CRZ
             class {{args[i].names[0]}} < {{base_type}}
               def initialize
               end
+
+              def ==(other : Other) forall Other
+                case other
+                when {{args[i].names[0]}}
+                  return true
+                else
+                  false
+                end
+              end
             end
           {% else %}
             # subclass with members
@@ -30,6 +40,18 @@ module CRZ
                 {% end %}
                 @value{{args[i].type_vars.size - 1}} : {{args[i].type_vars[args[i].type_vars.size - 1]}}
               )
+              end
+
+              def ==(other : Other) forall Other
+                case other
+                when {{args[i].name}}
+                  {% for arg_i in 0...args[i].type_vars.size %}
+                  return false if @value{{arg_i}} != other.value{{arg_i}}
+                  {% end %}
+                  return true
+                else
+                  false
+                end
               end
             end
           {% end %}
@@ -45,6 +67,15 @@ module CRZ
                 {% end %}
               ) < {{base_type}}
               def initialize
+              end
+
+              def ==(other : Other) forall Other
+                case other
+                when {{args[i].names[0]}}
+                  true
+                else
+                  false
+                end
               end
             end
           {% else %} # intersection type
@@ -63,6 +94,18 @@ module CRZ
                 {% end %}
                 @value{{args[i].type_vars.size - 1}} : {{args[i].type_vars[args[i].type_vars.size - 1]}}
               )
+              end
+
+              def ==(other : Other) forall Other
+                case other
+                when {{args[i].name}}
+                  {% for arg_i in 0...args[i].type_vars.size %}
+                  return false if @value{{arg_i}} != other.value{{arg_i}}
+                  {% end %}
+                  return true
+                else
+                  false
+                end
               end
             end
           {% end %}
@@ -165,7 +208,8 @@ module CRZ
       {% else %}
         # generic base
         {% for i in 0...args.size - 1 %}
-          {% if args[i].class_name == "Path" %} # constructor with no value types
+          # constructor with no value types
+          {% if args[i].class_name == "Path" %}
             class {{args[i].names[0]}}(
                 {{base_type.type_vars[0]}}
                 {% for j in 1...base_type.type_vars.size %}
@@ -173,6 +217,15 @@ module CRZ
                 {% end %}
               ) < {{base_type}}
               def initialize
+              end
+
+              def ==(other : Other) forall Other
+                case other
+                when {{args[i].names[0]}}
+                  true
+                else
+                  false
+                end
               end
             end
           {% else %} # intersection type
@@ -191,6 +244,18 @@ module CRZ
                 {% end %}
                 @value{{args[i].type_vars.size - 1}} : {{args[i].type_vars[args[i].type_vars.size - 1]}}
               )
+              end
+
+              def ==(other : Other) forall Other
+                case other
+                when {{args[i].name}}
+                  {% for j in 0...args[i].type_vars.size %}
+                  return false if @value{{j}} != other.value{{j}}
+                  {% end %} 
+                  true
+                else
+                  false
+                end
               end
             end
           {% end %}

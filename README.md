@@ -23,6 +23,13 @@ CRZ is a functional programming library for the Crystal language.
 include CRZ
 ```
 ### Algebraic data types
+Algebraic data types are a lightweight way of defining data types
+that can be one of multiple sub types, each having its own data values.
+Think of them as a single abstract base class with multiple subclasses.
+
+CRZ provides macros for creating algebraic types with overloaded equality (`==`)
+and `to_s` (TODO) methods.
+
 Define basic algebraic type using adt
 ```
 ## A list type for integers
