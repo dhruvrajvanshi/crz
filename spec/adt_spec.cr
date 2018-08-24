@@ -24,6 +24,9 @@ adt Res(T, E),
 
 adt Pair(A, B), Pair(A, B)
 
+adt Named,
+  N {x : Int32, y : Int32}
+
 
 describe CRZ do
   it "creates constructors for non generic adt" do
@@ -113,5 +116,12 @@ describe CRZ do
     copied2 = Pair::Pair.new(1, 2).copy_with value0: 3
     copied.should eq Pair::Pair.new(1, 4)
     copied2.should eq Pair::Pair.new(3, 2)
+  end
+
+  it "generates named properties" do
+    n = Named::N.new x: 1, y: 2
+    n.x.should eq 1
+    n.y.should eq 2
+    n.copy_with(x: 3, y: 4).should eq Named::N.new(3, 4)
   end
 end

@@ -25,6 +25,17 @@ module CRZ
             subclass_name = args[i].names[0]
             members = [] of ArrayLiteral
           %}
+        {% elsif args[i].is_a?(ArrayLiteral) %}
+          {%
+            subclass_name = args[i].stringify.split('{')[0].strip.id
+            members = args[i].map do |m|
+              if m.is_a?(Path)
+                m.id
+              else
+                m.type
+              end
+            end
+          %}
         {% else %}
           # case with fields
           {%
@@ -32,28 +43,41 @@ module CRZ
             members = args[i].type_vars
           %}
         {% end %}
+
         {%
           member_names = [] of String
         %}
-        {% for j in 0...members.size %}
-          # next line has to be commented because
-          # << method returns the array causing it to
-          # be included in the generated class. Commenting it
-          # out is a simple hack to prevent it from happening
-          # {{ member_names << "value#{j}".id }}
+        {% if args[i].is_a?(ArrayLiteral) %}
+          {% for j in 0...args[i].size %}
+            {% if args[i][j].is_a?(TypeDeclaration) %}
+              # {{ member_names << args[i][j].var }}
+            {% else %}
+              # {{ member_names << "value#{j}".id }}
+            {% end %}
+          {% end %}
+        {% else %}
+          {% for j in 0...members.size %}
+            # next line has to be commented because
+            # << method returns the array causing it to
+            # be included in the generated class. Commenting it
+            # out is a simple hack to prevent it from happening
+            # {{ member_names << "value#{j}".id }}
+          {% end %}
         {% end %}
+            
         {% if is_generic %}
           {% generic_param_list = "(#{generics.join(", ").id})".id %}
         {% else %}
           {% generic_param_list = "".id %}
         {% end %}
+
         class {{subclass_name}}{{generic_param_list}} < {{base_type}}
           {% for j in 0...members.size %}
-          property value{{j}}
+          property {{member_names[j]}} : {{members[j]}}
           {% end %}
           def initialize(
             {% for j in 0...members.size %}
-            @value{{j}} : {{members[j]}},
+            {{"@#{member_names[j]}".id}} : {{members[j]}},
             {% end %}
           )
           end
@@ -61,8 +85,8 @@ module CRZ
           def ==(other : Other) forall Other
             case other
             when {{subclass_name}}
-              {% for arg_i in 0...members.size %}
-              return false if @value{{arg_i}} != other.value{{arg_i}}
+              {% for arg_i in 0...member_names.size %}
+              return false if @{{member_names[arg_i]}} != other.{{member_names[arg_i]}}
               {% end %}
               return true
             else
