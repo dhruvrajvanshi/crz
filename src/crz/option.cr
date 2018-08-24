@@ -3,9 +3,9 @@ include CRZ
 module CRZ::Containers
   alias Some = Option::Some
   alias None = Option::None
-  adt_class Option(A),
-    Some(A), None,
-    abstract class ADTOption(A)
+  adt Option(A),
+    Some(A),
+    None do
       include Monad(A)
 
       def to_s

@@ -1,10 +1,9 @@
 module CRZ::Containers
   alias Ok = Result::Ok
   alias Err = Result::Err
-  adt_class Result(T, E),
+  adt Result(T, E),
     Ok(T),
-    Err(E),
-    abstract class ADTResult(T, E)
+    Err(E) do
       include Monad(T)
       
       def self.of(value : T) : Result(T, E)
