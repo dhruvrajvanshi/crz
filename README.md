@@ -36,7 +36,7 @@ crz:
   version: ~> 1.0.0
 ```
 
-Then run `crystal deps` in your project directory.
+Then run `shard install` in your project directory.
 
 ```crystal
 include CRZ
