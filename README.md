@@ -74,16 +74,16 @@ listWith0And1 = IntList::Cons.new 0, listWithJust1
 ```crystal
 adt Point,
   Named { x : Int32, y : Int32 },
-    // property x : Int
-    // property y : Int
+    # property x : Int
+    # property y : Int
 
   PartiallyNamed { x: Int32, Int32 },
-    // property x : Int32
-    // property value1 : Int32
+    # property x : Int32
+    # property value1 : Int32
 
   Unnamed { Int32, Int32 }
-    // property value0 : Int32
-    // property value1 : Int32
+    # property value0 : Int32
+    # property value1 : Int32
 ```
 
 In case no name is provided, the name of the property will be
