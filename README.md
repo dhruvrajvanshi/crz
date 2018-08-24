@@ -7,6 +7,7 @@ CRZ is a functional programming library for the Crystal language.
   - Nilable
   - Result
 * Algebraic data types (using macros).
+* Automatic generation of `==` and `copy_with` methods like builtin `records` macro.
 * Haskell like do notation (more macro goodness).
 * Macros for Applicative types.
 * Pattern matching
@@ -17,8 +18,24 @@ CRZ is a functional programming library for the Crystal language.
 * Emulate algebraic data types using macros.
 * Make working with algebraic types type safe and easy using pattern matching.
 
+## Changelog
+### 1.0.0
+Breaking changes:
+- `==` method is now overridden for adt variants meaning that it will now use value equality instead of reference equality. i.e.
+  `Option::Success.new(1) == Option::Success.new(1)` will always be true.
+- `adt_class` macro has been removed. Instead, you
+  can simply pass a block containing your custom methods to the `adt` macro.
 
 ## Quickstart
+Add this to your shard.yml
+```yaml
+crz:
+  git: dhruvrajvanshi/crz
+  version: ~> 1.0.0
+```
+
+Then run `crystal deps` in your project directory.
+
 ```crystal
 include CRZ
 ```
@@ -51,6 +68,25 @@ listWith0And1 = IntList::Cons.new 0, (IntList::Cons.new 1, IntList::Empty.new)
 listWith0And1 = IntList::Cons.new 0, listWithJust1
 ```
 
+#### Named fields
+```crystal
+adt Point,
+  Named { x : Int32, y : Int32 },
+    // property x : Int
+    // property y : Int
+
+  PartiallyNamed { x: Int32, Int32 },
+    // property x : Int32
+    // property value1 : Int32
+
+  Unnamed { Int32, Int32 }
+    // property value0 : Int32
+    // property value1 : Int32
+```
+
+In case no name is provided, the name of the property will be
+`@valueN`, where `N` is the index of the field for that constructor
+
 #### Accesing values of ADT variants
 Each ADT variant (subtype) has instance variables @value0, @value1,
 etc according to their index in the data type.
@@ -58,6 +94,25 @@ etc according to their index in the data type.
 head = listWith0And1.value0
 ```
 This method is there but does not utilize the full power of CRZ ADTs.
+
+#### Cloning and copying
+Each variant has a `clone` method that makes a copy of that object.
+
+`copy_with` method is like clone but fields can be updated individually.
+
+```crystal
+adt Point, P {x : Int32, y : Int32}
+
+Point::P.new(1, 2).copy_with(3, 4) # => Point::P(3, 4)
+
+# Or using field label
+Point::P.new(1, 2).copy_with(y: 3) # => Point::P(1, 3)
+
+```
+If you don't pass a field to `copy_with`, the one from the current
+object is used as a default value. i.e. `copy_with` without any arguments
+works like `clone`.
+
 
 #### Pattern matching
 All user defined ADTs allow getting values from them using pattern matching. You can write cases corresponding to each variant in the data type and conditionally perform actions.
@@ -111,6 +166,26 @@ IntList.match list, IntList, {
 ```
 You have to add .call at the end of the proc otherwise, it will be returned as a value instead of being called.
 
+For values with named fields, using a `case` expression is somewhat cleaner.
+
+```crystal
+adt X,
+  A { a : Int32 },
+  B { b : String }
+
+x = X::A.new a: 1
+...
+
+case x
+when X::A
+  # type of x will be narrowed to X::A at compile time
+  x.a
+else
+  # Inferred as X::B
+  x.b
+end
+```
+
 #### Generic ADTs
 You can also declare a generic ADTs.
 Here's a version of IntList which can be instantiated for any type.
@@ -127,14 +202,14 @@ head = List.match cons, List(Int32), { # Just List won't work here, it has to be
 }
 ```
 
-#### ADT Classes
-You may need to add methods to your ADTs. This can be done using `adt_class` macro which is similar to `adt` but has a class declaration as it's last argument.
+#### Adding custom methods
+You may need to add methods to your ADTs. This can be done by passing a block to the `adt` macro.
 For example, here's a partial implementation of `CRZ::Containers::Option` with a few members excluded for brevity.
 ```crystal
-adt_class Option(A),
+adt Option(A),
     Some(A),
     None,
-    abstract class ADTOption(A)
+    do
       include Monad(A)
 
       def to_s
