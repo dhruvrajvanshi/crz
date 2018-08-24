@@ -32,6 +32,16 @@ module CRZ
             members = args[i].type_vars
           %}
         {% end %}
+        {%
+          member_names = [] of String
+        %}
+        {% for j in 0...members.size %}
+          # next line has to be commented because
+          # << method returns the array causing it to
+          # be included in the generated class. Commenting it
+          # out is a simple hack to prevent it from happening
+          # {{ member_names << "value#{j}".id }}
+        {% end %}
         {% if is_generic %}
           {% generic_param_list = "(#{generics.join(", ").id})".id %}
         {% else %}
@@ -62,10 +72,18 @@ module CRZ
 
           def clone : {{subclass_name}}{{generic_param_list}}
             {{subclass_name}}{{generic_param_list}}.new(
-              {% for j in 0...members.size %}
-              @value{{j}},
-              {% end %}
+              {{*member_names.map {|m| "@#{m}".id}}}
             )
+          end
+
+          def copy_with({{
+            *member_names.map do |member|
+              "#{member} = @#{member}".id
+            end
+          }}) : {{subclass_name}}{{generic_param_list}}
+            {{subclass_name}}{{generic_param_list}}.new({{
+              *member_names
+            }})
           end
         end
       {% end %}

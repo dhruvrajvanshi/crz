@@ -107,4 +107,11 @@ describe CRZ do
   it "generates clone method" do
     Pair::Pair.new(1, 2).clone.should eq Pair::Pair.new(1, 2)
   end
+
+  it "generates copy_with method" do
+    copied = Pair::Pair.new(1, 2).copy_with value1: 4
+    copied2 = Pair::Pair.new(1, 2).copy_with value0: 3
+    copied.should eq Pair::Pair.new(1, 4)
+    copied2.should eq Pair::Pair.new(3, 2)
+  end
 end
