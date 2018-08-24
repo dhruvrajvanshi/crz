@@ -2,105 +2,64 @@ module CRZ
 
   macro adt(base_type, *args)
     {% if base_type.class_name == "Path" %}
-      {% base_class = base_type.names[0] %}
+      {%
+        base_class = base_type.names[0]
+        is_generic = false
+        generics = [] of ArrayLiteral
+      %}
     {% else %}
-      {% base_class = base_type.name.names[0] %}
+      {%
+        base_class = base_type.name.names[0]
+        is_generic = true
+        generics = base_type.type_vars
+      %}
     {% end %}
 
     # base class
     abstract class {{base_type}}
       {{ yield }}
-
-      {% if base_type.class_name == "Path" %}
-        # non generic base
-        {% for i in 0...args.size %}
-          {% if args[i].class_name == "Path" %}
-            # case with no fields
-            {% subclass_name = args[i].names[0] %}
-            {% members = [] of ArrayLiteral %}
-          {% else %}
-            # case with fields
-            {% subclass_name = args[i].name %}
-            {% members = args[i].type_vars %}
+      {% for i in 0...args.size %}
+        {% if args[i].class_name == "Path" %}
+          # case with no fields
+          {%
+            subclass_name = args[i].names[0]
+            members = [] of ArrayLiteral
+          %}
+        {% else %}
+          # case with fields
+          {%
+            subclass_name = args[i].name
+            members = args[i].type_vars
+          %}
+        {% end %}
+        {% if is_generic %}
+          {% generic_param_list = "(#{generics.join(", ").id})".id %}
+        {% else %}
+          {% generic_param_list = "".id %}
+        {% end %}
+        class {{subclass_name}}{{generic_param_list}} < {{base_type}}
+          {% for j in 0...members.size %}
+          property value{{j}}
           {% end %}
-          class {{subclass_name}} < {{base_type}}
+          def initialize(
             {% for j in 0...members.size %}
-            property value{{j}}
+            @value{{j}} : {{members[j]}},
             {% end %}
-            def initialize(
-              {% for j in 0...members.size %}
-              @value{{j}} : {{members[j]}},
-              {% end %}
-            )
-            end
+          )
+          end
 
-            def ==(other : Other) forall Other
-              case other
-              when {{subclass_name}}
-                {% for arg_i in 0...members.size %}
-                return false if @value{{arg_i}} != other.value{{arg_i}}
-                {% end %}
-                return true
-              else
-                false
-              end
+          def ==(other : Other) forall Other
+            case other
+            when {{subclass_name}}
+              {% for arg_i in 0...members.size %}
+              return false if @value{{arg_i}} != other.value{{arg_i}}
+              {% end %}
+              return true
+            else
+              false
             end
           end
-        {% end %}
-      {% else %}
-        # generic base
-        {% for i in 0...args.size %}
-          {% if args[i].class_name == "Path" %} # constructor with no value types
-            class {{args[i].names[0]}}(
-                {{base_type.type_vars[0]}}
-                {% for j in 1...base_type.type_vars.size %}
-                  , {{base_type.type_vars[j]}}
-                {% end %}
-              ) < {{base_type}}
-              def initialize
-              end
-
-              def ==(other : Other) forall Other
-                case other
-                when {{args[i].names[0]}}
-                  true
-                else
-                  false
-                end
-              end
-            end
-          {% else %} # intersection type
-            class {{args[i].name}}(
-                {{base_type.type_vars[0]}}
-                {% for j in 1...base_type.type_vars.size %}
-                  , {{base_type.type_vars[j]}}
-                {% end %}
-              ) < {{base_type}}
-              {% for j in 0...args[i].type_vars.size %}
-                property value{{j}}
-              {% end %}
-              def initialize(
-                {% for j in 0...args[i].type_vars.size - 1 %}
-                  @value{{j}} : {{args[i].type_vars[j]}},
-                {% end %}
-                @value{{args[i].type_vars.size - 1}} : {{args[i].type_vars[args[i].type_vars.size - 1]}}
-              )
-              end
-
-              def ==(other : Other) forall Other
-                case other
-                when {{args[i].name}}
-                  {% for arg_i in 0...args[i].type_vars.size %}
-                  return false if @value{{arg_i}} != other.value{{arg_i}}
-                  {% end %}
-                  return true
-                else
-                  false
-                end
-              end
-            end
-          {% end %}
-        {% end %}
+        end
       {% end %}
 
       macro match(val, base, cases)
