@@ -22,6 +22,9 @@ adt Res(T, E),
   Empty
 
 
+adt Pair(A, B), Pair(A, B)
+
+
 describe CRZ do
   it "creates constructors for non generic adt" do
     empty = IntList::Empty.new
@@ -99,5 +102,9 @@ describe CRZ do
     (Option.of(1) == Option.of(2)).should eq false
     Option::None(Int32).new.should eq Option::None(Int32).new
     (Option::None(Int32).new == Option::Some.new(1)).should eq false
+  end
+
+  it "generates clone method" do
+    Pair::Pair.new(1, 2).clone.should eq Pair::Pair.new(1, 2)
   end
 end

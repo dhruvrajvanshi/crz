@@ -59,6 +59,14 @@ module CRZ
               false
             end
           end
+
+          def clone : {{subclass_name}}{{generic_param_list}}
+            {{subclass_name}}{{generic_param_list}}.new(
+              {% for j in 0...members.size %}
+              @value{{j}},
+              {% end %}
+            )
+          end
         end
       {% end %}
 
