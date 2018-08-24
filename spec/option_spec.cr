@@ -38,13 +38,13 @@ describe Option do
       x.should eq 34
       x + 1
     end
-    Option.match mapped, Option(Int32), {
+    Option.match mapped, {
       [Some, x] => (x.should eq 35),
       [_]       => (1.should eq 2),
     }
 
     string_option = mapped.map &.to_s
-    Option.match string_option, Option(String), {
+    Option.match string_option, {
       [Some, x] => (x.should eq "35"),
       [_]       => (1.should eq 2),
     }
@@ -55,7 +55,7 @@ describe Option do
       x + 3
     end
 
-    Option.match mapped, Option(Int32), {
+    Option.match mapped, {
       [Some, x] => (1.should eq 2),
       [None]    => (1.should eq 1),
     }

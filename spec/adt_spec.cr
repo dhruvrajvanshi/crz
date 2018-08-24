@@ -27,7 +27,9 @@ adt Pair(A, B), Pair(A, B)
 adt Named,
   N {x : Int32, y : Int32}
 
-
+adt List(A),
+  Empty,
+  Cons(A, List(A))
 describe CRZ do
   it "creates constructors for non generic adt" do
     empty = IntList::Empty.new
@@ -40,28 +42,28 @@ describe CRZ do
     empty = IntList::Empty.new
     cons = IntList::Cons.new 1, empty
 
-    v = IntList.match(empty, IntList, {
+    v = IntList.match(empty, {
       [Empty] => 1,
       [_]     => 2,
     })
     v.should eq 1
 
-    IntList.match(empty, IntList, {
+    IntList.match(empty, {
       [Cons, x, xs] => 2,
       [_]           => 1,
     }).should eq 1
 
-    IntList.match(cons, IntList, {
+    IntList.match(cons, {
       [Cons, x, xs] => x,
       [_]           => 2,
     }).should eq 1
 
-    IntList.match(cons, IntList, {
+    IntList.match(cons, {
       [Cons, 0, xs] => 2,
       [_]           => 1,
     }).should eq 1
 
-    IntList.match(cons, IntList, {
+    IntList.match(cons, {
       [Cons, 0, xs] => 1,
       [Cons, 1, xs] => 2,
       [_]           => 3,
@@ -123,5 +125,16 @@ describe CRZ do
     n.x.should eq 1
     n.y.should eq 2
     n.copy_with(x: 3, y: 4).should eq Named::N.new(3, 4)
+  end
+
+  it "pattern matches generic types" do
+    empty = List::Empty(Int32).new
+    cons  = List::Cons.new 1, empty
+
+    head = List.match cons, {
+      [Cons, x, _] => x,
+      [_] => nil
+    }
+    head.should eq 1
   end
 end
