@@ -32,7 +32,7 @@ Breaking changes:
 Add this to your shard.yml
 ```yaml
 crz:
-  git: dhruvrajvanshi/crz
+  github: dhruvrajvanshi/crz
   version: ~> 1.0.0
 ```
 
