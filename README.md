@@ -50,7 +50,7 @@ CRZ provides macros for creating algebraic types with overloaded equality (`==`)
 and `to_s` (TODO) methods.
 
 Define basic algebraic type using adt
-```
+```crystal
 ## A list type for integers
 adt IntList, # name of tye new type
   Empty,
