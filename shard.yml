@@ -3,5 +3,7 @@ version: 1.0.1
 
 license: MIT
 
+crystal: ">= 0.35.0, < 2.0.0"
+
 author:
   - Dhruv Rajvanshi <dhruvrajvanshi@outlook.com>
